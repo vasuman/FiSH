@@ -1,0 +1,9 @@
+Name:  Vasuman Ravichandran
+eMail: vasumanar@gmail.com
+
+Requires:
+Python >= 2.7
+
+Summary:
+A simple file transfer program that requires zero configuration. It discovers peers through IP Multicast and requires no central server to manage all connections. All communication is purely P2P.
+
