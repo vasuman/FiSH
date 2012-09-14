@@ -42,15 +42,27 @@ class Beacon():
 				else:
 					raise e
 			if n>max_attempt:
-				raise PeerDiscoveryError(2,'Maximum tries excceded')
+				raise PeerDiscoveryError(4,'Maximum tries excceded')
 			n+=1
 
 	def udp_broadcast(self):
 	    udp_sock=sck.socket(sck.AF_INET, sck.SOCK_DGRAM,sck.IPPROTO_UDP)
 	    udp_sock.setsockopt(sck.IPPROTO_IP, sck.IP_MULTICAST_TTL, 32)
-	    udp_sock.bind(('',self.mcast_port))
+	    try:
+	    	udp_sock.bind(('',self.mcast_port))
+	    except sck.error as e:
+	    	if x.errno is 98:
+			raise PeerDiscoveryError(2,"Another process is using broadcast port")
+		else:
+			print e
 	    msg='FISH_HOOK:{0}'.format(self.uid)
-	    udp_sock.sendto(msg,(self.mcast_addr, self.mcast_port))
+	    try:
+	    	udp_sock.sendto(msg,(self.mcast_addr, self.mcast_port))
+	    except sck.error as e:
+	    	if x.errno is 101:
+			raise PeerDiscoveryError(1,"Not connected to any network")
+		else:
+			print e
 	    udp_sock.close()
 
 	def get_peer_list(self, timeout):
@@ -62,7 +74,7 @@ class Beacon():
 		    con_sock,addr=tcp_sock.accept()
 	    except sck.timeout:
 	            tcp_sock.close()
-		    raise PeerDiscoveryError(1,'Wait timed out')
+		    raise PeerDiscoveryError(3,'Wait timed out')
 	    ip_list=con_sock.recv(65536)
 	    con_sock.close()
 	    tcp_sock.close()
@@ -88,6 +100,7 @@ class Inducter(threading.Thread):
 	self.tcp_sock=sck.socket(sck.AF_INET, sck.SOCK_STREAM)
 
     def pI(self):
+    	return True
     	extract_index=lambda x:self.addr_list[x]['index']
     	max_uid=max(self.addr_list,key=extract_index)
 	return (max_uid==self.uid)
@@ -98,13 +111,16 @@ class Inducter(threading.Thread):
     def stopped(self):
     	return self._stop.isSet()
 
-    def induce(self, addr):
+    def remove(self, e_uid):
+    	del self.addr_list[e_uid]
+
+    def induce(self, e_uid, addr):
     	last_index=self.addr_list.popitem()[1][2]
-    	new_peer_obj=Peer(uid,addr[0],last_index+1)
+    	new_peer_obj=Peer(e_uid,addr[0],last_index+1)
 	self.addr_list[uid]=new_peer_obj
 	if self.pI():
 		try:
-			self.tcp_sock.connect(addr)
+			self.tcp_sock.connect((addr[0],self.tcp_port))
 		except Exception as e:
 			print e
 		data_string=pickle.dumps(self.addr_list)
@@ -126,4 +142,4 @@ class Inducter(threading.Thread):
 		if msg.startswith('FISH_HOOK:'):
 			induce(extr_uid(msg),addr)
 		elif msg.startswith('FISH_UNHOOK:'):
-			remove(extr_uid(msg),addr)
+			remove(extr_uid(msg))
