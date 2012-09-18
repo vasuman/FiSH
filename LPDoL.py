@@ -1,8 +1,10 @@
+'''Local Peer Discovery over LAN'''
 import threading
 import struct
 import pickle
 import socket as sck
 import os
+import logging
 
 class Peer():
 	'''A class that encapsulates all attributes of a fish node'''
@@ -13,6 +15,9 @@ class Peer():
 
 	def __str__(self):
 		return '{0.index}: {0.ip} - {0.uid}'.format(self)
+	
+	def __repr__(self):
+		return '{0.ip} : {0.uid}'.format(self)
 
 class PeerDiscoveryError(Exception):
 	'''Implements better error handling'''
@@ -21,7 +26,7 @@ class PeerDiscoveryError(Exception):
 		self.msg=msg
 
 	def __str__(self):
-		return '{0}: {1}'.format(self.err,self.msg)
+		return '{0.err}: {0.msg}'.format(self)
 
 class MulticastSocket(sck.socket):
 	'''An implementation of a multicast socket built on a standard UDP socket specifically for use in LPDoL'''
@@ -42,6 +47,7 @@ class Beacon():
 	'''Broadcasts presence and listens for peer list'''
 	def __init__(self, uid, mcast):
 		self.uid=uid
+		self.peer_list=[]
 		try:
 			self.mc_sock=MulticastSocket(mcast)
 		except sck.error as e:
@@ -72,6 +78,7 @@ class Beacon():
 		if msg.startswith('FISHEIS:'):
 			self.peer_list=pickle.loads(msg[7:])
 			self.addr_recv=addr
+			self.mc_sock.sendm('FISH_HOOKED:{0}'.format(self.uid))
 		else:
 			raise e
 	
@@ -100,6 +107,7 @@ class Inducter(threading.Thread):
 		self._stop=threading.Event()
 		self.addr_list=addr_list
 		self.uid=uid
+		self._init_peers={}
 		try:
 			self.mc_sock=MulticastSocket(mcast)
 		except sck.error as e:
@@ -108,38 +116,50 @@ class Inducter(threading.Thread):
 			else:
 				raise e
 
-	def stop(self):
-		self._stop.set()
-
-	def stopped(self):
-		return self._stop.isSet()
-
-	def remove_peer(self, e_uid):
-		del self.addr_list[e_uid]
-
+	def induct(self, e_uid, addr):
+		if not e_uid in self.init_peers:
+			self._init_peers[e_uid]=1
+		else:
+			self._init_peers[e_uid]+=1
+		c=self._init_peers[e_uid]
+		if self.addr_list[-(c+1)].uid==self.uid or c is 4:
+			logging.info('Inducting peer {0} at {1}'.format(e_uid,addr))
+			data_string=pickle.dumps(self.addr_list)
+			self.mc_sock.sendm('FISHIES:{0}'.format(data_string))
+	
 	def add_peer(self, e_uid, addr):
 		last_index=self.addr_list[-1].index
 		new_peer_obj=Peer(e_uid,addr[0],last_index+1)
-		self.addr_list[e_uid]=new_peer_obj
+		if not new_peer_obj in self.addr_list:
+			self.addr_list.append(new_peer_obj)
 	
 	def extr_header(self,msg):
 		return msg[msg.index(':')+1:]
 
+	def resolve_conflict(self):
+		pass
+	
 	def run(self):
 		while True:
-			if self.stopped():
+			if self._stop.isSet():
 				msg='FISH_UNHOOK:{0}'.format(self.uid)
 				self.mc_sock.sendm(msg)
 				break
 			try:
-				msg,addr=self.udp_sock.recvfrom(1024)
+				msg,addr=self.mc_sock.recvfrom(1024)
+				print msg
 			except sck.timeout:
 				continue
 			if msg.startswith('FISH_HOOK:'):
+				logging.info('Initiation request from {0}'.format(addr))
 				self.add_peer(extr_header(msg),addr)
-				if self.addr_list[-2].uid==self.uid:
-					data_string=pickle.dumps(self.addr_list)
-					self.mc_sock.sendm('FISHIES:{0}'.format(data_string))
+				self.induct(extr_header(msg),addr)
 			elif msg.startswith('FISH_UNHOOK:'):
-				self.remove_peer(extr_header(msg))
-		
+				logging.info('Peer {0} has left'.format(addr))
+				del self.addr_list[e_uid]
+			elif msg.startswith('FISH_HOOKED:'):
+				del self._init_peers[extr_header(msg)]
+			elif msg.startswith('FISHIES:'):
+				br_pl=pickle.loads(extr_header(msg))
+				if not br_pl == self.addr_list:
+					self.resolve_conflict()
