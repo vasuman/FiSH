@@ -1,9 +1,8 @@
 '''Local Peer Discovery over LAN'''
 import threading
-import struct
-import pickle
+from struct import pack
+from pickle import dumps, loads
 import socket as sck
-import os
 import logging
 
 class Peer():
@@ -17,7 +16,7 @@ class Peer():
 		return '{0.index}: {0.ip} - {0.uid}'.format(self)
 	
 	def __repr__(self):
-		return '{0.ip} : {0.uid}'.format(self)
+		return 'PEER:{0.uid} at IP:{0.ip}'.format(self)
 
 class PeerDiscoveryError(Exception):
 	'''Implements better error handling'''
@@ -26,7 +25,7 @@ class PeerDiscoveryError(Exception):
 		self.msg=msg
 
 	def __str__(self):
-		return '{0.err}: {0.msg}'.format(self)
+		return '[ERROR {0.err}] {0.msg}'.format(self)
 
 class MulticastSocket(sck.socket):
 	'''An implementation of a multicast socket built on a standard UDP socket specifically for use in LPDoL'''
@@ -36,12 +35,18 @@ class MulticastSocket(sck.socket):
 		self.setsockopt(sck.SOL_SOCKET, sck.SO_REUSEADDR, 1)
 		self.setsockopt(sck.IPPROTO_IP, sck.IP_MULTICAST_TTL, 32)
 		self.bind(('',self.mcast_port))
-		mem = struct.pack('4sl', sck.inet_aton(self.mcast_addr), sck.INADDR_ANY)
+		mem = pack('4sl', sck.inet_aton(self.mcast_addr), sck.INADDR_ANY)
 		self.setsockopt(sck.IPPROTO_IP, sck.IP_ADD_MEMBERSHIP, mem)
 		self.settimeout(5)
+		self.convo=[]
 	
 	def sendm(self,msg):
 		return self.sendto(msg,(self.mcast_addr, self.mcast_port))
+
+	def recvm(self,bufsize):
+		m,a=self.recvfrom(bufsize)
+		self.conv.append((m,a))
+		return m,a
 	
 class Beacon():
 	'''Broadcasts presence and listens for peer list'''
@@ -50,6 +55,7 @@ class Beacon():
 		self.peer_list=[]
 		try:
 			self.mc_sock=MulticastSocket(mcast)
+			logging.info('Initated a multicast socket')
 		except sck.error as e:
 			if e.errno is 98:
 				raise PeerDiscoveryError(2,"Another process is using broadcast port")
@@ -63,8 +69,9 @@ class Beacon():
 		msg='FISH_HOOK:{0}'.format(self.uid)
 		try:
 			self.mc_sock.sendm(msg)
+			logging.info('Broadcasting beacon....')
 		except sck.error as e:
-			if x.errno is 101:
+			if e.errno is 101:
 				raise PeerDiscoveryError(1,"Not connected to any network")
 			else:
 				raise e
@@ -72,14 +79,16 @@ class Beacon():
 	def get_peer_list(self):
 		e=PeerDiscoveryError(3,'No valid response')
 		try:
-			msg,addr=self.mc_sock.recvfrom(1024)
+			msg,addr=self.mc_sock.recvm(1024)
+			logging.info('Recieved a response')
 		except sck.timeout:
 			raise e
 		if msg.startswith('FISHEIS:'):
-			self.peer_list=pickle.loads(msg[7:])
+			self.peer_list=loads(msg[7:])
 			self.addr_recv=addr
 			self.mc_sock.sendm('FISH_HOOKED:{0}'.format(self.uid))
 		else:
+			logging.info('Not a valid respone')
 			raise e
 	
 	def burn(self, max_attempt):
@@ -95,6 +104,7 @@ class Beacon():
 				break
 			except PeerDiscoveryError as e:
 				if e.err is 3:
+					logging.warning('Attempt {0} failed!'.format(n))
 					n+=1
 					continue
 				else:
@@ -124,7 +134,7 @@ class Inducter(threading.Thread):
 		c=self._init_peers[e_uid]
 		if self.addr_list[-(c+1)].uid==self.uid or c is 4:
 			logging.info('Inducting peer {0} at {1}'.format(e_uid,addr))
-			data_string=pickle.dumps(self.addr_list)
+			data_string=dumps(self.addr_list)
 			self.mc_sock.sendm('FISHIES:{0}'.format(data_string))
 	
 	def add_peer(self, e_uid, addr):
@@ -160,6 +170,6 @@ class Inducter(threading.Thread):
 			elif msg.startswith('FISH_HOOKED:'):
 				del self._init_peers[extr_header(msg)]
 			elif msg.startswith('FISHIES:'):
-				br_pl=pickle.loads(extr_header(msg))
+				br_pl=loads(extr_header(msg))
 				if not br_pl == self.addr_list:
 					self.resolve_conflict()
