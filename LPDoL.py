@@ -160,11 +160,11 @@ class Inducter(threading.Thread):
 				continue
 			if msg.startswith('FISH_HOOK:'):
 				logging.info('Initiation request from {0}'.format(addr))
-				self.add_peer(extr_header(msg),addr)
+				self._add_peer(extr_header(msg),addr)
 				self._induct(extr_header(msg),addr)
 			elif msg.startswith('FISH_UNHOOK:'):
 				logging.info('Peer {0} has left'.format(addr))
-				del self.addr_list[e_uid]
+				del self.addr_list[extr_header(msg)]
 			elif msg.startswith('FISH_HOOKED:'):
 				del self._init_peers[extr_header(msg)]
 			elif msg.startswith('FISHIES:'):
