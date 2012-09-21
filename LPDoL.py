@@ -69,7 +69,6 @@ class Beacon():
 			logging.info('Broadcasting beacon....')
 		except sck.error as e:
 			if e.errno is 101:
-				print e
 				raise PeerDiscoveryError(1,"Not connected to any network")
 			else:
 				raise e
