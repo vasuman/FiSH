@@ -33,6 +33,7 @@ class MulticastSocket(sck.socket):
 		self.setsockopt(sck.SOL_SOCKET, sck.SO_REUSEADDR, 1)
 		#Specifying the TTL of the packet -- restricted to same site
 		self.setsockopt(sck.IPPROTO_IP, sck.IP_MULTICAST_TTL, 32)
+		self.setsockopt(sck.SOL_IP, sck.IP_MULTICAST_LOOP, 0)
 		#Binding to specified Multicast Port
 		self.bind(('',self.mcast_port))
 		#Joining the Multicast Address
@@ -126,7 +127,7 @@ class Inducter(threading.Thread):
 				raise e
 
 	def _induct(self, e_uid, addr):
-		if not e_uid in self.init_peers:
+		if not e_uid in self._init_peers:
 			self._init_peers[e_uid]=1
 		else:
 			self._init_peers[e_uid]+=1
