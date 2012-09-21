@@ -6,6 +6,9 @@ import uuid
 import sys
 import socket
 from netifaces import ifaddresses, interfaces, AF_INET
+import logging
+
+logging.basicConfig(level=logging.INFO)
 
 def create_fish_net(uid,mcast):
 	self_obj=Peer(uid,get_ip(),0)
@@ -31,7 +34,6 @@ if __name__=='__main__':
 		
 	except PeerDiscoveryError as e:
 		if e.err is 4:
-			print b.mc_sock.convo
 			print "No existing network creating a FISH_NET"
 			i=create_fish_net(uid,mcast)
 			i.start()
