@@ -77,7 +77,7 @@ class Beacon():
 	def _listen(self):
 		e=PeerDiscoveryError(3,'No valid response')
 		try:
-			msg,addr=self.mc_sock.recvfrom(1024)
+			msg,addr=self.mc_sock.recvfrom(102400)
 			logging.info('Recieved a response:-\n{0}'.format(msg))
 		except sck.timeout:
 			raise e
@@ -142,10 +142,16 @@ class Inducter(threading.Thread):
 		new_peer_obj=Peer(e_uid,addr[0],last_index+1)
 		if not new_peer_obj in self.addr_list:
 			self.addr_list.append(new_peer_obj)
+		else:
+			logging.warning('Peer {0} has re-inited'.format(e_uid))
 
 	def _resolve_conflict(self):
 		pass
-	
+
+	def _remove_peer(self,e_uid):
+		for peer_obj in self.addr_list:
+			if peer_obj.uid == e_uid:
+				self.addr_list.remove(peer_obj)
 	def run(self):
 		extr_header=lambda msg: msg[msg.index(':')+1:]
 		while True:
@@ -165,7 +171,7 @@ class Inducter(threading.Thread):
 				self._induct(extr_header(msg),addr)
 			elif msg.startswith('FISH_UNHOOK:'):
 				logging.info('Peer {0} has left'.format(addr))
-				del self.addr_list[extr_header(msg)]
+				self._remove_peer(extr_header(msg))
 			elif msg.startswith('FISH_HOOKED:'):
 				del self._init_peers[extr_header(msg)]
 			elif msg.startswith('FISHIES:'):
