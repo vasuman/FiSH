@@ -1,10 +1,8 @@
 #!/usr/bin/env python2
 import os
-import socket as sck
 from TwLPD import *
 import uuid
 import sys
-import socket
 from netifaces import ifaddresses, interfaces, AF_INET
 import logging
 from twisted.internet import reactor
@@ -20,27 +18,27 @@ def get_ip():
 				return addr
 	return ''
 
+def shout(uid):
+	if i.peer_list is None:
+		shout.n+=1
+		if shout.n>shout.max_attempt:
+			print "Creating FISH_NET"
+			i.peer_list=set([Peer(uid=uid, addr=get_ip(), index=0)])
+		else:
+			print "Broadcasting"
+			i.broadcast()
+			reactor.callLater(2,shout,(uid))
+shout.n=0
+shout.max_attempt=3
+def cleanup():
+	print i.peer_list
+
 if __name__=='__main__':
-	max_attempt=3
-	n=0
 	uid=str(uuid.uuid4())
 	mcast=('224.1.23.24',15523)
 	i=Inducter(uid, mcast)
-	b=sck.socket(sck.AF_INET, sck.SOCK_DGRAM, sck.IPPROTO_UDP)
-	b.setsockopt(sck.IPPROTO_IP, sck.IP_MULTICAST_TTL, 32)
 	reactor.listenMulticast(15523, i, listenMultiple=True)
+	reactor.callLater(1,shout,(uid))
+	reactor.addSystemEventTrigger('before', 'shutdown', cleanup)
 	reactor.run()
-	while True:
-		if not i.peer_list is None:
-			print "Inducted"
-			print i.peer_list
-			break
-		if n>max_attempt:
-			p_o=Peer(uid,get_ip(),0)
-			print "Creating FISH_NET"
-			i.peer_list=set([p_o])
-			break
-		b.sendto('FISH_HOOK:{0}'.format(uid), mcast)
-		n+=1
-	while True:
-		pass
+	
