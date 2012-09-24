@@ -77,6 +77,9 @@ class Inducter(DatagramProtocol):
 			raise MessageException(4,'Invalid pickling string')
 		if self.peer_list is None:
 			self.peer_list=peer_list
+			# Host in now inducted
+			msg='FISH_HOOKED:{0}'.format(self.uid)
+			self.transport.write(msg,(self.mcast_addr,self.mcast_port))
 		# Check for confilcting peer lists
 		elif self.peer_list != peer_list:
 			self._conflict(peer_list, addr)
