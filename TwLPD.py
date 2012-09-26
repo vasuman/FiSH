@@ -37,7 +37,13 @@ class Inducter(DatagramProtocol):
 		self.transport.setTTL(32)
 		# Join the multicast address, so we can receive replies:
 	        self.transport.joinGroup(self.mcast_addr)
+		self.transport.setLoopbackMode(1)
 
+	def disconnect(self):
+		'''Call explicitly on disconnecting'''
+		message='FISH_UNHOOK:{0}'.format(self.uid)
+		self.transport.write(message, (self.mcast_addr, self.mcast_port))
+	
 	def broadcast(self):
 		'''Broadcasts a FISH_HOOK on Multicast group'''
 		message='FISH_HOOK:{0}'.format(self.uid)
@@ -91,6 +97,7 @@ class Inducter(DatagramProtocol):
 		del self.peer_list[data]
 
 	def datagramReceived(self, message, addr):
+		print message,addr
 		if not ':' in message:
 			raise MessageException(1,'Malformed message string')
 		chop_msg=message.split(':')

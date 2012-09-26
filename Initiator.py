@@ -39,6 +39,7 @@ if __name__=='__main__':
 	i=Inducter(uid, mcast)
 	reactor.listenMulticast(15523, i, listenMultiple=True)
 	reactor.callLater(1,shout,(uid))
+	reactor.addSystemEventTrigger('before', 'shutdown', i.disconnect)
 	reactor.addSystemEventTrigger('before', 'shutdown', cleanup)
 	reactor.run()
 	
