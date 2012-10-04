@@ -37,7 +37,7 @@ class MulticastSocket(sck.socket):
 		#Binding to specified Multicast Port
 		self.bind(('',self.mcast_port))
 		#Joining the Multicast Address
-		mem = pack('4sl', sck.inet_aton(self.mcast_addr), sck.INADDR_ANY)
+		mem = pack('=4sl', sck.inet_aton(self.mcast_addr), sck.INADDR_ANY)
 		self.setsockopt(sck.IPPROTO_IP, sck.IP_ADD_MEMBERSHIP, mem)
 		#Specifying timeout
 		self.settimeout(timeout)
