@@ -38,15 +38,22 @@ class Inducter(DatagramProtocol):
 		# Join the multicast address, so we can receive replies:
 	        self.transport.joinGroup(self.mcast_addr)
 		self.transport.setLoopbackMode(1)
+		# Register unhook trigger
+		self.transport.reactor.addSystemEventTrigger('before', 'shutdown', self._disconnect)
 
-	def disconnect(self):
-		'''Call explicitly on disconnecting'''
+	def _disconnect(self):
 		message='FISH_UNHOOK:{0}'.format(self.uid)
 		self.transport.write(message, (self.mcast_addr, self.mcast_port))
 	
 	def broadcast(self):
 		'''Broadcasts a FISH_HOOK on Multicast group'''
 		message='FISH_HOOK:{0}'.format(self.uid)
+		self.transport.write(message, (self.mcast_addr, self.mcast_port))
+
+	def create_net(self,addr_list):
+		self.peer_list=addr_list
+		data_str=pickle.dumps(self.peer_list)
+		message='FISH_PL:{0}'.format(data_str)
 		self.transport.write(message, (self.mcast_addr, self.mcast_port))
 
 	def _induct(self, data, addr):
@@ -61,14 +68,9 @@ class Inducter(DatagramProtocol):
 		self.peer_list.add(new_peer)
 		# Increment no. initialization requests 
 		self._init_reqs[data]+=1
-		reqs=self._init_reqs[data]
-		# Find peer responsible for induction
-		poI=sorted(self.peer_list, key=extract_index)[-(reqs)]
-		# Respond if responsible or final requst of peer
-		if poI.uid == self.uid or reqs is 3:
-			data_str=pickle.dumps(self.peer_list)
-			message='FISH_PL:{0}'.format(data_str)
-			self.transport.write(message, (self.mcast_addr, self.mcast_port))
+		data_str=pickle.dumps(self.peer_list)
+		message='FISH_PL:{0}'.format(data_str)
+		self.transport.write(message, (self.mcast_addr, self.mcast_port))
 
 	def _inducted(self, data, addr):
 		del self._init_reqs[data]
@@ -95,6 +97,7 @@ class Inducter(DatagramProtocol):
 
 	def _remove(self, data, addr):
 		del self.peer_list[data]
+		
 
 	def datagramReceived(self, message, addr):
 		print message,addr
