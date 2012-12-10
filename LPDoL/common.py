@@ -1,6 +1,6 @@
 from collections import namedtuple
 
-Peer=namedtuple('Peer','uid addr index')
+Peer=namedtuple('Peer','uid addr')
 
 MSG_CODES={
         1:'FISH_HOOK',
