@@ -1,3 +1,4 @@
+#!/usr/bin/env python2
 from LPDoL.TwLPD import *
 from uuid import uuid1
 import netifaces
