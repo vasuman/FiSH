@@ -35,6 +35,7 @@ class LMessage(object):
         '''Creates a message object from string of form 
             <key>:<data>'''
         self.key,self.data=self._parse_message(message)
+        print self
 
     def __init__(self,key,data):
         '''Creates a message object from key and data
@@ -46,6 +47,7 @@ class LMessage(object):
         self._validate_message(key,data)
         self.key=key
         self.data=data
+        print self
     
     def __repr__(self):
         '''Human understandable representation of message'''
