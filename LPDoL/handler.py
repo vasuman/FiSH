@@ -29,9 +29,8 @@ class MessageHandler(object):
 
     def handle(self,data,ip):
         try:
-            message=LMessage(data)
+            message=LMessage(data_str=data)
         except MessageException as e:
-            print e
             return
         new_peer=Peer(message.data[0], ip)
         self.FUNC_CODES[message.key](new_peer)
