@@ -3,10 +3,10 @@ from collections import namedtuple
 Peer=namedtuple('Peer','uid addr')
 
 MSG_CODES={
-        1:'FISH_HOOK',
-        2:'FISH_UNHOOK',
-        3:'FISH_LIVE',
-        4:'FISH_DEAD'}
+        1:'LPDOL_HOOK',
+        2:'LPDOL_UNHOOK',
+        3:'LPDOL_LIVE',
+        4:'LPDOL_DEAD'}
 
 KEY_MUL_UID=[1]
 

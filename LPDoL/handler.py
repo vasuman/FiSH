@@ -27,6 +27,15 @@ class MessageHandler(object):
     def _del_peer(self,new_peer):
         self.peer_list.discard(new_peer)
 
+    #Changes need to be made to LMessage befor we can register custom handlers
+    #--validation of UIDs
+    # def registerCustomHandler(self, message_key, handlingFn):
+    #     if not callable(handlingFn):
+    #         return -2
+    #     if message_key in self.FUNC_CODES:
+    #         return -1
+    #     self.FUNC_CODES[message_key]=handlingFn
+
     def handle(self,data,ip):
         try:
             message=LMessage(data_str=data)

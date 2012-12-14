@@ -1,6 +1,6 @@
 #common.py
 
-INVALID_CHARS=[';',':','\\','/',' ','\'','"',',']
+INVALID_CHARS=[';',':','\\','/',' ','\'','\"',',']
 
 class FTError(Exception):
     '''Base Error class -- all other exceptions inherit from this'''

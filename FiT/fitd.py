@@ -8,21 +8,23 @@ from indexer import *
 SERVER_STATES={
     0:'HANDSHAKE',
     1:'FILE_TRANSFER'
+    2:'BUSY'
 }
 
 
 
-class ItFd(LineReceiver):
+class FileTransferDaemon(LineReceiver):
     def __init__(self, identity, file_indexer):
         self.STATE_FUNCTIONS={
             0:self.register_connection,
-            1:self.transfer_file}
+            1:self.transfer_file
+            2:self.do_nothing}
         self.ident=identity
         self.indexer=file_indexer
         self.conn_peer=None
         self.rFn=None
         self.state = 0
-        
+
     def addRefreshTrigger(self, refreshFn):
         self.rFn=refreshFn
 
@@ -44,23 +46,29 @@ class ItFd(LineReceiver):
             return False
         self.state=1
         self.sendLine(json.dumps(self.indexer.index))
-
         return True
         
-    def transfer_file(self, fileId):
-        if not fileId in self.indexer.index:
+    def transfer_file(self, fileHash):
+        if not fileHash in self.indexer.index:
             self.sendLine('INVALID_FILE_ID')
             return False
-        file_obj=self.indexer.getFile(fileId)
-        size=self.indexer.getFileSize(fileId)
-        self.sendLine('SUCCESS:F_S:{0}'.format(size))
+        file_obj=self.indexer.getFile(fileHash)
+        self.sendLine('SUCCESS_F_S')
+        self.state=2
         fs=FileSender()
-        self.transport.registerProducer(fs, streaming=True)
+        self.transport.registerProducer(fs, streaming=False)
         d=fs.beginFileTransfer(file_obj, self.transport)
-        d.addCallback(self.complete_transfer)
+        d.addCallback(self.complete_transfer, True)
+        d.addErrback(self.complete_transfer, False)
         return True
 
-    def complete_transfer(self):
+    def do_nothing(self, _):
+        pass
+
+    def complete_transfer(self, success):
+        self.state=1
+        if not success:
+            
         pass
 
 class IFFactory(Factory):
@@ -69,7 +77,9 @@ class IFFactory(Factory):
         self.inx=indexer
 
     def buildProtocol(self, addr):
-        return ItFd(self.id, self.inx)
-i=IdentString('vasuman','90d45d52450d11e2b59e94dbc9483303','127.0.0.1')
-reactor.listenTCP(8123, IFFactory(i, FileIndexer()))
-reactor.run()
+        return FileTransferDaemon(self.id, self.inx)
+
+if __name__ == '__main__':
+    i=IdentString('vasuman','90d45d52450d11e2b59e94dbc9483303','127.0.0.1')
+    reactor.listenTCP(8123, IFFactory(i, FileIndexer()))
+    reactor.run()
