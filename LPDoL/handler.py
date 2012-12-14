@@ -1,4 +1,4 @@
-from common import Peer, LMessage
+from common import *
 from twisted.internet import reactor
 
 class MessageHandler(object):
@@ -16,16 +16,16 @@ class MessageHandler(object):
         #Add UNHOOK trigger
         reactor.addSystemEventTrigger('before', 'shutdown', self.unhook)
 
-    def _respond_hook(self,new_peer):
-        self.peer_list.add(new_peer)
-        if not self.mc_sock.host_peer.uid in message.data:
+    def _respond_hook(self,source_peer,message):
+        self.peer_list.add(source_peer)
+        if not self.host.uid in message.data:
             self.live()
 
-    def _add_peer(self,new_peer):
-        self.peer_list.add(new_peer)
+    def _add_peer(self,source_peer,message):
+        self.peer_list.add(source_peer)
     
-    def _del_peer(self,new_peer):
-        self.peer_list.discard(new_peer)
+    def _del_peer(self,source_peer,message):
+        self.peer_list.discard(source_peer)
 
     #Changes need to be made to LMessage befor we can register custom handlers
     #--validation of UIDs
@@ -38,11 +38,11 @@ class MessageHandler(object):
 
     def handle(self,data,ip):
         try:
-            message=LMessage(data_str=data)
+            message=LMessage(message_str=data)
         except MessageException as e:
             return
-        new_peer=Peer(message.data[0], ip)
-        self.FUNC_CODES[message.key](new_peer)
+        source_peer=Peer(message.data[0], ip)
+        self.FUNC_CODES[message.key](source_peer, message)
         
     def hook(self, this_call):
         '''Broadcasts a FISH_HOOK on Multicast group'''
