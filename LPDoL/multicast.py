@@ -26,6 +26,5 @@ class Inducter(DatagramProtocol):
         self.callingFunction=handleFn
 
     def datagramReceived(self, datagram, addr):
-        print datagram,addr
         if not self.callingFunction is None:
             self.callingFunction(datagram, addr)
