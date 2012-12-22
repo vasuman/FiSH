@@ -1,63 +1,59 @@
-from twisted.internet.protocol import Factory
-from twisted.protocols.basic import LineReceiver, FileSender
+from twisted.internet.protocol import Factory, Protocol
+from twisted.protocols.basic import FileSender
 from twisted.internet import reactor
 import json
 from common import *
 from indexer import *
 
-SERVER_STATES={
-    1:'FILE_TRANSFER',
-    2:'BUSY'
-}
 
-
-
-class FileTransferDaemon(LineReceiver):
+class FileTransferDaemon(Protocol):
     def __init__(self, file_indexer):
-        self.STATE_FUNCTIONS={
-            1:self.transfer_file,
-            2:self.do_nothing}
+        self.busy=False
+        self.err_count=0
         self.indexer=file_indexer
-        self.rFn=None
-        self.state = 1
+        self.fileObj=None
+        self.request_handler={
+            1:self._dump_file_HT,
+            2:self._load_file,
+            3:self._start_transfer,
+            }
 
-    def addRefreshTrigger(self, refreshFn):
-        self.rFn=refreshFn
+    def sendLine(self, line):
+        self.transport.write(str(line)+'\n')
 
-    def connectionMade(self):
-        self.sendLine(json.dumps(self.indexer.index))
+    def dataReceived(self, buff_str):
+        for char in buff_str:
+            self.buffLine+=char
+            if char =='\n':
+                self.serviceRequest(self.buffLine[:-1])
+                self.buffLine=''
 
-    def connectionLost(self, reason):
-        pass
+    def serviceRequest(self, request):
+        if self.busy: return
+        try:
+            req=m.LMessage(message_str=request)
+            self.request_handler[req.code](req.data)
+        except Exception as e:
+            self._failure()
+            self.sendLine(DaemonException(1,'Invalid request'))
 
-    def lineReceived(self, line):
-        if not self.STATE_FUNCTIONS[self.state](line):
+    def _load_file(self, fileHash):
+        try:
+            self.fileObj=self.indexer.getFile(fileHash)
+        except IndexerException as e:
+            self.sendLine(e)
+
+    def _start_transfer(self, _discard):
+        self.busy=True
+
+    def _failure(self):
+        self.err_count+=1
+        if self.err_count > 3:
             self.transport.loseConnection()
+
+    def _dump_file_HT(self):
+        self.sendLine(self.indexer.reduced_index())
         
-    def transfer_file(self, fileHash):
-        if not fileHash in self.indexer.index:
-            self.sendLine('INVALID_FILE_ID')
-            return False
-        file_obj=self.indexer.getFile(fileHash)
-        self.sendLine('SUCCESS_F_S')
-        self.state=2
-        #Simulates a Producer; transport - underlying protocol; is the consumer
-        fs=FileSender()
-        self.transport.registerProducer(fs, streaming=False)
-        d=fs.beginFileTransfer(file_obj, self.transport)
-        #Add completion triggers
-        d.addCallback(self.complete_transfer, True)
-        d.addErrback(self.complete_transfer, False)
-        return True
-
-    def do_nothing(self, _):
-        return True
-
-    def complete_transfer(self, success):
-        self.state=1
-        if not success:
-            self.transport.loseConnection()
-
 class IFFactory(Factory):
     def __init__(self, indexer):
         self.inx=indexer
