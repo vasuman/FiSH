@@ -53,5 +53,9 @@ class FileIndexer(object):
         file_flags='wb'
         return open(file_path,'wb')
 
+    def reduced_index(self):
+        red_fn=lambda x:(os.path.basename(x[0]),x[1])
+        return json.dumps(dict([(k,red_fn(v)) for k,v in self.index.iteritems()])
+
 if __name__ == '__main__':
     print len(FileIndexer(raw_input('Enter path:')).index.keys())
