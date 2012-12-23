@@ -8,14 +8,13 @@ class FileIndexer(object):
     with their SHA1 checksums as keys and a tuple of (<filename>,<size>) as corresponding values
     The FileIndexer recursively traverses all subdirectories of main directory supplied'''
     def __init__(self, path):
-        print 'inxing'
         if not os.path.exists(path):
             raise IndexerException(1, 'Invalid path supplied')
         if not os.path.isdir(path):
             raise IndexerException(2,'Path is not directory')
         self.path=os.path.abspath(path)
         self._generate_index()
-        print 'inxed'
+        print 'indexed'
 
     def _generate_index(self):
         temp_index={}
@@ -35,13 +34,13 @@ class FileIndexer(object):
                 temp_index[sha1sum]=(filename,file_size)
         self.index=temp_index
 
-    def getFile(self,fileIndex):
+    def getFile(self, fileIndex):
         '''Returns a file object of the file at index opened in read mode'''
-        if not fileIndex in self.index:
-            raise IndexerException(3,'Invalid index supplied')
+        if not fileIndex in self.index.keys():
+            raise IndexerException(3,'INVALID_FILE_ID')
         filename,_=self.index[fileIndex]
         if not os.path.exists(filename):
-            raise IndexerException(4,'Directory structure has changed')
+            raise IndexerException(4,'DIR_CHANGED')
         return open(filename, 'rb')
 
     def saveFile(self, fileName, overwrite=False):
@@ -55,7 +54,7 @@ class FileIndexer(object):
 
     def reduced_index(self):
         red_fn=lambda x:(os.path.basename(x[0]),x[1])
-        return json.dumps(dict([(k,red_fn(v)) for k,v in self.index.iteritems()])
+        return json.dumps(dict([(k,red_fn(v)) for k,v in self.index.iteritems()]))
 
 if __name__ == '__main__':
     print len(FileIndexer(raw_input('Enter path:')).index.keys())
