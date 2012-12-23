@@ -16,6 +16,9 @@ MSG_CODES_VALID={}
 #The KEY_MUL_MEM variable is used to allow certain keys to hold multiple data
 KEY_MUL_MEM=[]
 
+#The NO_PARAM variable stores the keys which don't need any parameters
+NO_PARAM=[]
+
 class LMessage(object):
     '''All communication between peers is done by objects of this class'''
     def __init__(self,key=None,data=None,message_str=None):
@@ -38,27 +41,29 @@ class LMessage(object):
     
     def __repr__(self):
         '''Human understandable representation of message'''
-        return MSG_CODES_VALID[self.key][0]+':'+';'.join(['.'.join(it) for it in self.data])
+        return MSG_CODES_VALID[self.key][0]+':'+';'.join(['.'.join(map(str,it)) for it in self.data])
 
     def __str__(self):
         '''Returns a serialized representation of object of form
             <key>:<data>'''
-        return str(self.key)+':'+';'.join(['.'.join(it) for it in self.data])
+        return str(self.key)+':'+';'.join(['.'.join(map(str,it)) for it in self.data])
                 
     def _validate_message(self,key,data):
         #Checking if <key> is valid index
         if not key in MSG_CODES_VALID.keys():
             raise MessageException(4,'Invalid key index')
-        validation_function=MSG_CODES_VALID[key][1]
+        validation_function=lambda x:True
+        if len(MSG_CODES_VALID[key]) == 2:
+            validation_function=MSG_CODES_VALID[key][1]
         #Checking all data items
         for valid in map(validation_function,data):
         	if not valid:
         		raise MessageException(7, 'Invalid data member')
         #Checking for underflow
-        if len(data) == 0:
+        if (not key in NO_PARAM) and len(data) == 0:
             raise MessageException(5,'Too few arguments')
         #Only certain message is supposed to have multiple data members
-        if (not key in KEY_MUL_MEM) and len(data) != 1:
+        if (not key in KEY_MUL_MEM) and len(data) > 1:
                 raise MessageException(6,'Too many members')
 
     def _parse_message(self,message):
@@ -67,14 +72,18 @@ class LMessage(object):
             raise MessageException(1,'Malformed message string')
         chop_msg=message.split(':')
         #Checking if type '<key>:<data>'
-        if not len(chop_msg) == 2:
-            raise MessageException(2,'Invalid message parameters')
-        #Checking if type(<key>) is int
         try:
             key=int(chop_msg[0])
         except:
             raise MessageException(3,'Invalid key type')
-        data_str=chop_msg[1]
-        data=data_str.split(';')
-        data=[tuple(it.split('.')) for it in data]
+        #Checking for number of parameters
+        if (not key in NO_PARAM) and (not len(chop_msg) == 2):
+            raise MessageException(2,'Invalid message parameters')
+        #Checking if type(<key>) is int
+        if (not key in NO_PARAM):
+            data_str=chop_msg[1]
+            data=data_str.split(';')
+            data=[tuple(it.split('.')) for it in data]
+        else:
+            data=[]
         return (key,data)
