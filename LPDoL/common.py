@@ -1,7 +1,5 @@
 from collections import namedtuple
-import util.message as m
-
-Peer=namedtuple('Peer','uid addr name')
+import util.message
 
 INVALID_CHARS=[';',':','\\','/',' ','\'','\"',',']
 
@@ -33,13 +31,17 @@ def validate_identity(id_tuple):
     uid,name=id_tuple
     return validate_name(name) and validate_uid(uid)
 
-m.MSG_CODES_VALID={
+util.message.MSG_CODES_VALID={
         1:('LPDOL_HOOK',validate_identity),
         2:('LPDOL_UNHOOK',validate_identity),
         3:('LPDOL_LIVE',validate_identity),
         4:('LPDOL_NAMETAKEN',validate_identity)}
 
-m.KEY_MUL_MEM=[1]
+util.message.KEY_MUL_MEM=[1]
+
+from util.message import *
+
+Peer=namedtuple('Peer','uid addr name')
 
 class LPDoLError(Exception):
     '''Base Error class -- all other exceptions inherit from this'''

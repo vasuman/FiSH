@@ -1,11 +1,11 @@
 #common.py
-import util.message as m
+import util.message
 
-def is_error(error_str):
-    if not '.' in error_str:
+def is_error(error_tup):
+    if not len(error_tup) == 2:
         return False
     try:
-        code, msg=error_str.split('.')
+        code, msg=error_tup
         code=int(code)
         assert type(msg)==str
     except:
@@ -23,13 +23,18 @@ def verify_sha1(sha):
         return False
     return True
 
-m.MSG_CODES_VALID={
-        1:('LIST_HASH_TABLE',lambda x:x == 1),
+# Message codes from 1-3 are sent from client to server, 
+# error messages - code 4; is only sent from server to client 
+util.message.MSG_CODES_VALID={
+        1:('LIST_HASH_TABLE',),
         2:('LOAD_FILE',verify_sha1),
-        3:('START_TRANSFER',lambda x:x == 3),
+        3:('START_TRANSFER',),
         4:('ERROR',is_error)}
 
-m.KEY_MUL_MEM=[]
+util.message.NO_PARAM=[1,3]
+
+from util.message import *
+
 
 class FTError(Exception):
     '''Base Error class -- all other exceptions inherit from this'''
@@ -49,5 +54,3 @@ class DaemonException(FTError):
     '''Is raised when an invalid FiTd call occurs'''
     def __repr__(self):
         return 'FITD_XCP - [ERROR {0.err}]: {0.message}'.format(self)
-
-
