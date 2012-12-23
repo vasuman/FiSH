@@ -12,7 +12,8 @@ def is_error(error_tup):
         return False
     return True
 
-def verify_sha1(sha):
+def verify_sha1(sh_tup):
+    sha=sh_tup[0]
     #Check for 40 byte string
     if not len(sha) == 40:
         return False

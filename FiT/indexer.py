@@ -2,6 +2,7 @@
 import os
 from common import IndexerException
 from hashlib import sha1
+import json
 
 class FileIndexer(object):
     '''The FileIndexer class generates an index(dictionary) of all filenames 

@@ -8,6 +8,7 @@ from indexer import *
 
 class FileTransferDaemon(Protocol):
     def __init__(self, file_indexer):
+        self.buffLine=''
         self.busy=False
         self.err_count=0
         self.indexer=file_indexer
@@ -25,24 +26,28 @@ class FileTransferDaemon(Protocol):
         for char in buff_str:
             self.buffLine+=char
             if char =='\n':
-                self.serviceRequest(self.buffLine[:-1])
+                cmd_str=self.buffLine.replace('\n','')
+                cmd_str=cmd_str.replace('\r','')
+                self.serviceRequest(cmd_str)
                 self.buffLine=''
 
     def serviceRequest(self, request):
         if self.busy: return
         try:
-            req=m.LMessage(message_str=request)
-            self.request_handler[req.code](req.data)
+            req=LMessage(message_str=request)
+            self.request_handler[req.key](req.data)
         except Exception as e:
+            print e
             self._failure()
-            error_msg=m.LMessage(4,[(1,'INVALID_REQUEST')])
+            error_msg=LMessage(4,[(1,'INVALID_REQUEST')])
             self.sendLine(error_msg)
 
-    def _dump_file_HT(self):
+    def _dump_file_HT(self, _discard):
         self.sendLine(self.indexer.reduced_index())
     
-    def _load_file(self, fileHash):
+    def _load_file(self, fileHL):
         try:
+            fileHash=fileHL[0][0]
             self.fileObj=self.indexer.getFile(fileHash)
         except IndexerException as e:
             self.sendLine(e)
@@ -50,7 +55,7 @@ class FileTransferDaemon(Protocol):
     def _start_transfer(self, _discard):
         if self.fileObj is None:
             self._failure()
-            error_msg=m.LMessage(4,[(2,'NO_FILE_LOADED')])
+            error_msg=LMessage(4,[(2,'NO_FILE_LOADED')])
             self.sendLine(error_msg)
             return -1
         self.busy=True
@@ -67,7 +72,7 @@ class FileTransferDaemon(Protocol):
     def _failure(self):
         self.err_count+=1
         if self.err_count > 5:
-            error_msg=m.LMessage(4,[(5,'MAX_ERR')])
+            error_msg=LMessage(4,[(5,'MAX_ERR')])
             self.sendLine(error_msg)
             self.transport.loseConnection()
 
@@ -78,7 +83,3 @@ class IFFactory(Factory):
 
     def buildProtocol(self, addr):
         return FileTransferDaemon(self.inx)
-
-if __name__ == '__main__':
-    reactor.listenTCP(17395, IFFactory(FileIndexer('/home/vasuman/Documents/FiSH')))
-    reactor.run()
