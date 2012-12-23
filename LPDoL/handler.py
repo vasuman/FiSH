@@ -45,8 +45,8 @@ class MessageHandler(object):
 
     def handle(self,data,ip):
         try:
-            message=m.LMessage(message_str=data)
-        except m.MessageException as e:
+            message=LMessage(message_str=data)
+        except MessageException as e:
             return -1
         source_uid, source_name=message.data[0]
         source_peer=Peer(uid=source_uid, name=source_name, addr=ip)
@@ -58,7 +58,7 @@ class MessageHandler(object):
         peer_uid=map(repr_peer, self.peer_list)
         #Prefix host UID to list
         peer_uid.insert(0,repr_peer(self.host))
-        message=m.LMessage(1,peer_uid)
+        message=LMessage(1,peer_uid)
         self.op_func(message)
         #Generate next time gap -- Exponential back-off
         if self.hook_gap < 256: self.hook_gap*=2
@@ -67,15 +67,15 @@ class MessageHandler(object):
     
     def naming_conflict(self,source_peer):
         '''Alerts a peer that the name is already in use'''
-        message=m.LMessage(4,[repr_peer(source_peer)])
+        message=LMessage(4,[repr_peer(source_peer)])
         self.op_func(message)
 
     def live(self):
         '''Asserts existance by broadcasting LPDOL_LIVE'''
-        message=m.LMessage(3,[repr_peer(self.host)])
+        message=LMessage(3,[repr_peer(self.host)])
         self.op_func(message)
 
     def unhook(self):
         '''Broadcasts a LPDOL_UNHOOK message before disconnecting'''
-        message=m.LMessage(2,[repr_peer(self.host)])
+        message=LMessage(2,[repr_peer(self.host)])
         self.op_func(message)
