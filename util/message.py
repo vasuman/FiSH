@@ -77,10 +77,12 @@ class LMessage(object):
         except:
             raise MessageException(3,'Invalid key type')
         #Checking for number of parameters
-        if (not key in NO_PARAM) and (not len(chop_msg) == 2):
+        if len(chop_msg) != 2:
             raise MessageException(2,'Invalid message parameters')
+        if key in NO_PARAM and chop_msg[1] != '':
+            raise MessageException(8,'No parameters allowed')
         #Checking if type(<key>) is int
-        if (not key in NO_PARAM):
+        if not key in NO_PARAM:
             data_str=chop_msg[1]
             data=data_str.split(';')
             data=[tuple(it.split('.')) for it in data]
