@@ -6,9 +6,9 @@ from common import *
 from indexer import *
 
 
-class FileTransferDaemon(Protocol):
+class FileShareDaemon(StreamLineProtocol):
     def __init__(self, file_indexer):
-        self.buffLine=''
+        StreamLineProtocol.__init__(self)
         self.busy=False
         self.err_count=0
         self.indexer=file_indexer
@@ -17,62 +17,49 @@ class FileTransferDaemon(Protocol):
             1:self._dump_file_HT,
             2:self._load_file,
             3:self._start_transfer,
-            }
+        }
 
-    def sendLine(self, line):
-        self.transport.write(str(line)+'\n')
-
-    def dataReceived(self, buff_str):
-        for char in buff_str:
-            self.buffLine+=char
-            if char =='\n':
-                cmd_str=self.buffLine.replace('\n','')
-                cmd_str=cmd_str.replace('\r','')
-                self.serviceRequest(cmd_str)
-                self.buffLine=''
-
-    def serviceRequest(self, request):
+    def serviceMessage(self, request):
         if self.busy: return
         try:
             req=LMessage(message_str=request)
             self.request_handler[req.key](req.data)
         except Exception as e:
-            print e
-            self._failure()
-            error_msg=LMessage(4,[(1,'INVALID_REQUEST')])
-            self.sendLine(error_msg)
+            self._failure((1,'INVALID_REQUEST'))
 
     def _dump_file_HT(self, _discard):
         self.sendLine(self.indexer.reduced_index())
     
-    def _load_file(self, fileHL):
+    def _load_file(self, fileMsg):
         try:
-            fileHash=fileHL[0][0]
+            fileHash=fileMsg[0][0]
             self.fileObj=self.indexer.getFile(fileHash)
+            file_size=self.indexer.getFileSize(fileHash)
+            reply_msg=LMessage(3,[(file_size,)])
+            self.sendLine(reply_msg)
         except IndexerException as e:
             self.sendLine(e)
 
     def _start_transfer(self, _discard):
         if self.fileObj is None:
-            self._failure()
-            error_msg=LMessage(4,[(2,'NO_FILE_LOADED')])
-            self.sendLine(error_msg)
-            return -1
-        self.busy=True
-        fs_proc=FileSender()
-        d=fs_proc.beginFileTransfer(file=self.fileObj, consumer=self.transport)
-        d.addCallback(self._done_transfer, True)
-        d.addErrback(self._done_transfer, False)
+            self._failure((2,'NO_FILE_LOADED'))
+        else:
+            self.busy=True
+            fileProducer=FileSender()
+            def_obj=fileProducer.beginFileTransfer(file=self.fileObj, consumer=self.transport)
+            def_obj.addCallback(self._done_transfer, True)
+            def_obj.addErrback(self._done_transfer, False)
 
     def _done_transfer(self, _discard, success):
         self.busy=False
         if not success:
-            self._failure()
+            self._failure((5,'INCOMPLETE_TRANSFER'))
 
-    def _failure(self):
+    def _failure(self, reason):
+        self.sendLine(LMessage(4,[reason]))
         self.err_count+=1
         if self.err_count > 5:
-            error_msg=LMessage(4,[(5,'MAX_ERR')])
+            error_msg=LMessage(4,[(6,'MAX_ERR')])
             self.sendLine(error_msg)
             self.transport.loseConnection()
 
@@ -82,4 +69,4 @@ class IFFactory(Factory):
         self.inx=indexer
 
     def buildProtocol(self, addr):
-        return FileTransferDaemon(self.inx)
+        return FileShareDaemon(self.inx)

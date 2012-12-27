@@ -20,8 +20,7 @@ class FileIndexer(object):
     def _generate_index(self):
         temp_index={}
         for item in os.walk(self.path):
-            #Using 'don't CARE' condition '_'
-            base_dir, _, basenames=item
+            base_dir, _discard, basenames=item
             for basename in basenames:
                 filename=os.path.join(base_dir,basename)
                 #Skip broken symlinks!
@@ -39,10 +38,19 @@ class FileIndexer(object):
         '''Returns a file object of the file at index opened in read mode'''
         if not fileIndex in self.index.keys():
             raise IndexerException(3,'INVALID_FILE_ID')
-        filename,_=self.index[fileIndex]
-        if not os.path.exists(filename):
+        filename, file_size=self.index[fileIndex]
+        if not os.path.exists(filename) :
+            self._generate_index()
             raise IndexerException(4,'DIR_CHANGED')
+        with open(filename,'rb') as file_obj:
+            sha1sum=sha1(file_obj.read()).hexdigest()
+        if sha1sum != fileIndex:
+            self._generate_index()
+            raise IndexerException(8,'FILE_CHANGED')
         return open(filename, 'rb')
+
+    def getFileSize(self, fileIndex):
+        return self.index[fileIndex][1]
 
     def saveFile(self, fileName, overwrite=False):
         '''Returns a file like object to write data to in current directory'''
@@ -50,7 +58,6 @@ class FileIndexer(object):
         if os.path.exists(file_path):
             if not overwrite:
                 raise IndexerException(5,'File already exists')
-        file_flags='wb'
         return open(file_path,'wb')
 
     def reduced_index(self):
@@ -59,3 +66,4 @@ class FileIndexer(object):
 
 if __name__ == '__main__':
     print len(FileIndexer(raw_input('Enter path:')).index.keys())
+
