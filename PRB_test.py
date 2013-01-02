@@ -1,11 +1,11 @@
 from twisted.internet import reactor
 from FiT.probe import *
-
+import sys
 
 def fHTFn(success, fHT):
     if success:
         fileHash=pPrint(fHT)
-        f=open('temp_file','wb')
+        f=open(fHT[fileHash][0],'wb')
         reactor.connectTCP(ip, 17395, FTFactory(fileHash, f, doneCb))
     else:
         print 'Failed to get HT'
@@ -23,7 +23,7 @@ def doneCb(success):
     reactor.stop()
 
 if __name__ == '__main__':
-    ip=raw_input('Enter IP: ')
+    ip=sys.argv[1]
     reactor.connectTCP(ip, 17395, FHFactory(fHTFn))
     reactor.run()
 
