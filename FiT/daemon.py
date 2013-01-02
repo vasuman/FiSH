@@ -22,7 +22,7 @@ class FileShareDaemon(StreamLineProtocol):
     def serviceMessage(self, request):
         if self.busy: return
         try:
-            req=LMessage(message_str=request)
+            req=FiTMessage(message_str=request)
             self.request_handler[req.key](req.data)
         except Exception as e:
             self._failure((1,'INVALID_REQUEST'))
@@ -35,7 +35,7 @@ class FileShareDaemon(StreamLineProtocol):
             fileHash=fileMsg[0][0]
             self.fileObj=self.indexer.getFile(fileHash)
             file_size=self.indexer.getFileSize(fileHash)
-            reply_msg=LMessage(3,[(file_size,)])
+            reply_msg=FiTMessage(3,[(file_size,)])
             self.sendLine(reply_msg)
         except IndexerException as e:
             self.sendLine(e)
@@ -56,10 +56,10 @@ class FileShareDaemon(StreamLineProtocol):
             self._failure((5,'INCOMPLETE_TRANSFER'))
 
     def _failure(self, reason):
-        self.sendLine(LMessage(4,[reason]))
+        self.sendLine(FiTMessage(4,[reason]))
         self.err_count+=1
         if self.err_count > 5:
-            error_msg=LMessage(4,[(6,'MAX_ERR')])
+            error_msg=FiTMessage(4,[(6,'MAX_ERR')])
             self.sendLine(error_msg)
             self.transport.loseConnection()
 

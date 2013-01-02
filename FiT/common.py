@@ -1,5 +1,4 @@
 #common.py
-import util.message
 
 def is_error(error_tup):
     if not len(error_tup) == 2:
@@ -33,17 +32,22 @@ def is_num(data):
 
 # Message codes from 1-2 are sent from client to server, 
 # error messages - code 4; is only sent from server to client 
-# code 3 - BEGIN message is sent by both client and server
-util.message.MSG_CODES_VALID={
+MSG_CODES_VALID={
         1:('LIST_HASH_TABLE',),
         2:('LOAD_FILE',verify_sha1),
         3:('START_TRANSFER',is_num),
         4:('ERROR',is_error)}
 
-util.message.NO_PARAM=[1]
+NO_PARAM=[1]
 
 from util.message import *
 
+FIT_context=MessageContext(family='FIT', message_codes=MSG_CODES_VALID, no_arg=NO_PARAM)
+
+class FiTMessage(LMessage):
+    def __init__(self, *args, **kwargs):
+        super(FiTMessage, self).__init__(context=FIT_context, *args, **kwargs)
+        
 from twisted.internet.protocol import Protocol
 
 class StreamLineProtocol(Protocol):

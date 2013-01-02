@@ -9,25 +9,32 @@ class MessageException(Exception):
 
 #The following valiables MUST be overwritten while importing to define message members
 
-#The MSG_CODES_VALID variable stores the names and validation functions 
-#for the corresponding keys in the form of a two member tuple
-MSG_CODES_VALID={}
 
-#The KEY_MUL_MEM variable is used to allow certain keys to hold multiple data
-KEY_MUL_MEM=[]
 
-#The NO_PARAM variable stores the keys which don't need any parameters
-NO_PARAM=[]
+class MessageContext(object):
+    def __init__(self, family, message_codes={}, key_multiple=[], no_arg=[]):
+        self.family = family
+        #The MSG_CODES_VALID variable stores the names and validation functions 
+        #for the corresponding keys in the form of a two member tuple
+        self.MSG_CODES_VALID=message_codes
 
+        #The KEY_MUL_MEM variable is used to allow certain keys to hold multiple data
+        self.KEY_MUL_MEM=key_multiple
+
+        #The NO_PARAM variable stores the keys which don't need any parameters
+        self.NO_PARAM=no_arg
+        
 class LMessage(object):
     '''All communication between peers is done by objects of this class'''
-    def __init__(self,key=None,data=None,message_str=None):
+    def __init__(self, key=None, data=None, message_str=None, context=None):
         '''Creates a message object from key and data
         key -- int : refer MSG_CODES_VALID variable
         data -- list of data members
         If a message_str is passed other values are neglected
         Creates a message object from string of form 
             <key>:<data>'''
+        assert type(context) == MessageContext, 'Must be a valid context'
+        self.context=context
         if not message_str is None:
             key,data=self._parse_message(message_str)
         #Standard validation of key and data
@@ -41,7 +48,7 @@ class LMessage(object):
     
     def __repr__(self):
         '''Human understandable representation of message'''
-        return MSG_CODES_VALID[self.key][0]+':'+';'.join(['.'.join(map(str,it)) for it in self.data])
+        return self.context.family+'_'+self.context.MSG_CODES_VALID[self.key][0]+':'+';'.join(['.'.join(map(str,it)) for it in self.data])
 
     def __str__(self):
         '''Returns a serialized representation of object of form
@@ -50,20 +57,20 @@ class LMessage(object):
                 
     def _validate_message(self,key,data):
         #Checking if <key> is valid index
-        if not key in MSG_CODES_VALID.keys():
+        if not key in self.context.MSG_CODES_VALID.keys():
             raise MessageException(4,'Invalid key index')
         validation_function=lambda x:True
-        if len(MSG_CODES_VALID[key]) == 2:
-            validation_function=MSG_CODES_VALID[key][1]
+        if len(self.context.MSG_CODES_VALID[key]) == 2:
+            validation_function=self.context.MSG_CODES_VALID[key][1]
         #Checking all data items
         for valid in map(validation_function,data):
         	if not valid:
         		raise MessageException(7, 'Invalid data member')
         #Checking for underflow
-        if (not key in NO_PARAM) and len(data) == 0:
+        if (not key in self.context.NO_PARAM) and len(data) == 0:
             raise MessageException(5,'Too few arguments')
         #Only certain message is supposed to have multiple data members
-        if (not key in KEY_MUL_MEM) and len(data) > 1:
+        if (not key in self.context.KEY_MUL_MEM) and len(data) > 1:
                 raise MessageException(6,'Too many members')
 
     def _parse_message(self,message):
@@ -79,10 +86,10 @@ class LMessage(object):
         #Checking for number of parameters
         if len(chop_msg) != 2:
             raise MessageException(2,'Invalid message parameters')
-        if key in NO_PARAM and chop_msg[1] != '':
+        if key in self.context.NO_PARAM and chop_msg[1] != '':
             raise MessageException(8,'No parameters allowed')
         #Checking if type(<key>) is int
-        if not key in NO_PARAM:
+        if not key in self.context.NO_PARAM:
             data_str=chop_msg[1]
             data=data_str.split(';')
             data=[tuple(it.split('.')) for it in data]

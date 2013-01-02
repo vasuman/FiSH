@@ -18,7 +18,7 @@ class HashListRetrieve(StreamLineProtocol):
         self.cbFn=callbackListing
 
     def connectionMade(self):
-        self.sendLine(LMessage(1,[]))
+        self.sendLine(FiTMessage(1,[]))
 
     def serviceMessage(self, message):
         success=True
@@ -39,14 +39,14 @@ class FileTransfer(StreamLineProtocol):
         self.cbFn=callbackListing
 
     def connectionMade(self):
-        self.sendLine(LMessage(2,[(self.fileHash,)]))
+        self.sendLine(FiTMessage(2,[(self.fileHash,)]))
 
     def serviceMessage(self, message):
         self.retFn(message)
 
     def _FTReply(self, reply):
         try:
-            msg=LMessage(message_str=reply)
+            msg=FiTMessage(message_str=reply)
             if msg.key == 4:
                 raise Exception(msg.data[0])
             elif msg.key != 3:
@@ -55,7 +55,7 @@ class FileTransfer(StreamLineProtocol):
             self.transport.loseConnection()
             return
         self.fSize=int(msg.data[0][0])
-        reply_msg=LMessage(3,[(str(self.fSize),)])
+        reply_msg=FiTMessage(3,[(str(self.fSize),)])
         StreamLineProtocol.registerSpHandler(self, self.fillFile)
         self.sendLine(reply_msg)
 

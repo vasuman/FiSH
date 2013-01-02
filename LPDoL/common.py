@@ -1,5 +1,4 @@
 from collections import namedtuple
-import util.message
 
 INVALID_CHARS=[';',':','\\','/',' ','\'','\"',',']
 
@@ -31,14 +30,20 @@ def validate_identity(id_tuple):
     uid,name=id_tuple
     return validate_name(name) and validate_uid(uid)
 
-util.message.MSG_CODES_VALID={
-        1:('LPDOL_HOOK',validate_identity),
-        2:('LPDOL_UNHOOK',validate_identity),
-        3:('LPDOL_LIVE',validate_identity)}
+MSG_CODES_VALID={
+        1:('HOOK',validate_identity),
+        2:('UNHOOK',validate_identity),
+        3:('LIVE',validate_identity)}
 
-util.message.KEY_MUL_MEM=[1]
+KEY_MUL_MEM=[1]
 
 from util.message import *
+
+LPDoL_context=MessageContext(family='LPDOL', message_codes=MSG_CODES_VALID, key_multiple=KEY_MUL_MEM)
+
+class PDMessage(LMessage):
+    def __init__(self, *args, **kwargs):
+        super(PDMessage, self).__init__(context=LPDoL_context, *args, **kwargs)
 
 Peer=namedtuple('Peer','uid addr name')
 

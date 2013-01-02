@@ -35,7 +35,7 @@ class MessageHandler(object):
 
     def handle(self,data,ip):
         try:
-            message=LMessage(message_str=data)
+            message=PDMessage(message_str=data)
         except MessageException as e:
             return -1
         source_uid, source_name=message.data[0]
@@ -48,7 +48,7 @@ class MessageHandler(object):
         peer_uid=map(repr_peer, self.peer_list)
         #Prefix host UID to list
         peer_uid.insert(0,repr_peer(self.host))
-        message=LMessage(1,peer_uid)
+        message=PDMessage(1,peer_uid)
         self.op_func(message)
         #Generate next time gap -- Exponential back-off
         if self.hook_gap < 256: self.hook_gap*=2
@@ -57,10 +57,10 @@ class MessageHandler(object):
 
     def live(self):
         '''Asserts existance by broadcasting LPDOL_LIVE'''
-        message=LMessage(3,[repr_peer(self.host)])
+        message=PDMessage(3,[repr_peer(self.host)])
         self.op_func(message)
 
     def unhook(self):
         '''Broadcasts a LPDOL_UNHOOK message before disconnecting'''
-        message=LMessage(2,[repr_peer(self.host)])
+        message=PDMessage(2,[repr_peer(self.host)])
         self.op_func(message)
