@@ -1,3 +1,10 @@
+import os
+if os.name == 'posix':
+    try:
+        from twisted.internet import glib2reactor
+        glib2reactor.install()
+    except ImportError as e:
+        print e
 from twisted.internet import reactor
 from FiT.probe import *
 import sys
