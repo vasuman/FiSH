@@ -3,8 +3,13 @@ if os.name == 'posix':
     try:
         from twisted.internet import glib2reactor
         glib2reactor.install()
-    except ImportError as e:
-        print e
+    except:
+        try:
+		from twisted.internet import cfreactor
+		cfreactor.install()
+	except:
+		print 'No platform specific reactor found!'
+
 from twisted.internet import reactor
 from FiT.probe import *
 import sys
