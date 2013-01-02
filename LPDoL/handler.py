@@ -5,17 +5,16 @@ def repr_peer(peer_obj):
     return (peer_obj.uid, peer_obj.name)
 
 class MessageHandler(object):
-    def __init__(self, host_peer, ofstream):
+    def __init__(self, host_peer, ofstream, peer_list):
         self.op_func=ofstream
         self.host=host_peer
-        self.peer_list=set([])
+        self.peer_list=peer_list
         self.hook_gap=1
         #Mapping message keys to handling functions
         self.FUNC_CODES={
             1:self._respond_hook,
             2:self._del_peer,
-            3:self._add_peer,
-            4:self._name_taken}
+            3:self._add_peer}
         #Add HOOK trigger
         reactor.addSystemEventTrigger('after', 'startup', self.hook)
         if reactor.running:
@@ -23,19 +22,10 @@ class MessageHandler(object):
         #Add UNHOOK trigger
         reactor.addSystemEventTrigger('before', 'shutdown', self.unhook)
 
-    def _respond_hook(self,source_peer,message):
-        if source_peer.name in [x.name for x in peer_list]:
-            if source_peer.name != 'anon':
-                self.naming_conflict(source_peer)
-                return             
+    def _respond_hook(self,source_peer,message):         
         self.peer_list.add(source_peer)
         if not self.host.uid in message.data:
             self.live()
-
-    def _name_taken(self,source_peer,message):
-        if not self.host.name == 'anon':
-            raise PeerDiscoveryError(1,'Name is already taken')
-            self._paused=True
             
     def _add_peer(self,source_peer,message):
         self.peer_list.add(source_peer)
@@ -64,11 +54,6 @@ class MessageHandler(object):
         if self.hook_gap < 256: self.hook_gap*=2
         #Register trigger with reactor
         reactor.callLater(self.hook_gap, self.hook)
-    
-    def naming_conflict(self,source_peer):
-        '''Alerts a peer that the name is already in use'''
-        message=LMessage(4,[repr_peer(source_peer)])
-        self.op_func(message)
 
     def live(self):
         '''Asserts existance by broadcasting LPDOL_LIVE'''

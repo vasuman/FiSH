@@ -34,8 +34,7 @@ def validate_identity(id_tuple):
 util.message.MSG_CODES_VALID={
         1:('LPDOL_HOOK',validate_identity),
         2:('LPDOL_UNHOOK',validate_identity),
-        3:('LPDOL_LIVE',validate_identity),
-        4:('LPDOL_NAMETAKEN',validate_identity)}
+        3:('LPDOL_LIVE',validate_identity)}
 
 util.message.KEY_MUL_MEM=[1]
 
