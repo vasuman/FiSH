@@ -13,7 +13,7 @@ class PeerContainer(list):
 
 	def add(self, peer_obj):
 		for item in self:
-			if item.ip == peer_obj.ip:
+			if item.addr == peer_obj.addr:
 				return
 		self.append(peer_obj)
 		reactor.callInThread(self.aT, self)
