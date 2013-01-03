@@ -4,8 +4,9 @@ from twisted.internet import reactor
 import json
 from common import *
 from indexer import *
+import logging
 
-
+MAX_ERR_COUNT=5
 class FileShareDaemon(StreamLineProtocol):
     def __init__(self, file_indexer):
         StreamLineProtocol.__init__(self)
@@ -37,6 +38,7 @@ class FileShareDaemon(StreamLineProtocol):
             file_size=self.indexer.getFileSize(fileHash)
             reply_msg=FiTMessage(3,[(file_size,)])
             self.sendLine(reply_msg)
+            logging.info('Loaded file with hash {0}'.format(fileHash))
         except IndexerException as e:
             self.sendLine(e)
 
@@ -44,6 +46,7 @@ class FileShareDaemon(StreamLineProtocol):
         if self.fileObj is None:
             self._failure((2,'NO_FILE_LOADED'))
         else:
+            logging.info('Started file transfer')
             self.busy=True
             fileProducer=FileSender()
             def_obj=fileProducer.beginFileTransfer(file=self.fileObj, consumer=self.transport)
@@ -54,19 +57,23 @@ class FileShareDaemon(StreamLineProtocol):
         self.busy=False
         if not success:
             self._failure((5,'INCOMPLETE_TRANSFER'))
+            logging.warning('File transfer not successful')
+        else:
+            logging.info('File transfer completed!')
 
     def _failure(self, reason):
         self.sendLine(FiTMessage(4,[reason]))
         self.err_count+=1
-        if self.err_count > 5:
+        if self.err_count > MAX_ERR_COUNT:
             error_msg=FiTMessage(4,[(6,'MAX_ERR')])
             self.sendLine(error_msg)
             self.transport.loseConnection()
-
+            logging.critical('Too many invalid requests from client. Disconnecting...')
         
 class IFFactory(Factory):
     def __init__(self, indexer):
         self.inx=indexer
 
     def buildProtocol(self, addr):
+        logging.info('Incoming connection from {0}'.format(str(addr)))
         return FileShareDaemon(self.inx)

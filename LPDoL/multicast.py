@@ -1,5 +1,6 @@
 from twisted.internet.protocol import DatagramProtocol
 from twisted.internet import reactor
+import logging
 
 class Inducter(DatagramProtocol):
     '''The heart of LPD, the Inducter class is a UDP socket 
@@ -11,12 +12,14 @@ class Inducter(DatagramProtocol):
 
     def broadcast(self,message):
         '''Broadcast given message on the multicast address'''
+        logging.debug('Broadcasting message {0}'.format(repr(message)))
         self.transport.write(str(message),self.mcast_addr)
 
     def startProtocol(self):
         self.transport.setTTL(32)
         #Join the multicast address, so we can receive replies:
         self.transport.joinGroup(self.mcast_addr[0])
+        logging.info('Multicast listening at {0}'.format(str(self.mcast_addr)))
         self.transport.setLoopbackMode(0)
         
     def addHandler(self, handleFn):

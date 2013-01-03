@@ -7,8 +7,6 @@ class MessageException(Exception):
     def __str__(self):
         return 'Invalid message - [ERROR {0.err}]: {0.message}'.format(self)
 
-#The following valiables MUST be overwritten while importing to define message members
-
 
 
 class MessageContext(object):
@@ -44,7 +42,7 @@ class LMessage(object):
         self.key=key
         self.data=data
         #DEBUG STATEMENT!!!!!
-        print repr(self)
+        # print repr(self)
     
     def __repr__(self):
         '''Human understandable representation of message'''

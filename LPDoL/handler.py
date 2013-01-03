@@ -1,5 +1,7 @@
 from common import *
 from twisted.internet import reactor
+import logging
+
 
 def repr_peer(peer_obj):
     return (peer_obj.uid, peer_obj.name)
@@ -38,6 +40,7 @@ class MessageHandler(object):
             message=PDMessage(message_str=data)
         except MessageException as e:
             return -1
+        logging.debug('Recieved {0} from {1}'.format(repr(message), ip))
         source_uid, source_name=message.data[0]
         source_peer=Peer(uid=source_uid, name=source_name, addr=ip)
         self.FUNC_CODES[message.key](source_peer, message)
