@@ -24,7 +24,7 @@ class MessageHandler(object):
 
     def _respond_hook(self,source_peer,message):         
         self.peer_list.add(source_peer)
-        if not self.host.uid in message.data:
+        if not self.host.uid in map(lambda x:x[0], message.data):
             self.live()
             
     def _add_peer(self,source_peer,message):
