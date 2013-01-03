@@ -12,22 +12,26 @@ class PeerContainer(list):
 		self.dT=onDel
 
 	def add(self, peer_obj):
+		flag=True
 		for item in self:
 			if item.addr == peer_obj.addr:
-				return
+				self.remove(item)
+				flag=False
 		self.append(peer_obj)
-		reactor.callInThread(self.aT, self)
+		if flag:
+			reactor.callInThread(self.aT, self)
 
 	def discard(self, peer_obj):	
-		if peer_obj in self:
-			self.remove(peer_obj)
-			reactor.callInThread(self.dT, self)
+		for item in self:
+			if item.addr == peer_obj.addr:
+				self.remove(item)
+				reactor.callInThread(self.dT, self)
 
 def refAdd(peer_list):
-	pass
+	print peer_list
 
 def refDel(peer_list):
-	pass
+	print peer_list
 
 if __name__ == '__main__':
 	p=Peer(uid=uuid1().hex, name='anon',addr='127.0.0.1')
