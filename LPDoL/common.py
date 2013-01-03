@@ -47,6 +47,28 @@ class PDMessage(LMessage):
 
 Peer=namedtuple('Peer','uid addr name')
 
+class PeerContainer(list):
+    def __init__(self, onAdd, onDel):
+        super(PeerContainer, self).__init__()
+        self.aT=onAdd
+        self.dT=onDel
+
+    def add(self, peer_obj):
+        flag=True
+        for item in self:
+            if item.addr == peer_obj.addr:
+                self.remove(item)
+                flag=False
+        self.append(peer_obj)
+        if flag:
+            reactor.callInThread(self.aT, self)
+
+    def discard(self, peer_obj):    
+        for item in self:
+            if item.addr == peer_obj.addr:
+                self.remove(item)
+                reactor.callInThread(self.dT, self)
+
 class LPDoLError(Exception):
     '''Base Error class -- all other exceptions inherit from this'''
     def __init__(self, err, message):
