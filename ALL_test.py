@@ -1,5 +1,4 @@
-from FiT.indexer import *
-from FiT.daemon import *
+import os
 if os.name == 'posix':
     try:
         from twisted.internet import glib2reactor
@@ -10,7 +9,8 @@ if os.name == 'posix':
             cfreactor.install()
         except:
             print 'No platform specific reactor found!'
-
+from FiT.indexer import *
+from FiT.daemon import *
 from twisted.internet import reactor
 from FiT.probe import *
 import sys
@@ -28,10 +28,10 @@ def bindfHT(addr, success, fHT):
     else:
         print 'Failed to get HT'
 
-def getFile(addr, fHash):
+def getFile(addr, fHash, name):
     global inxr
-    f=inxr.saveFile(fHT[fileHash][0])
-    reactor.connectTCP(addr, 17395, FTFactory(fileHash, f, doneCb))
+    f=inxr.saveFile(name)
+    reactor.connectTCP(addr, 17395, FTFactory(fHash, f, doneCb))
 
 def doneCb(success):
     print 'File Transfer done: ', success
@@ -41,6 +41,7 @@ def getFileHT(addr):
     reactor.connectTCP(addr, 17395, FHFactory(fHTFn))
 
 def refAdd(peer_list):
+    print peer_list
     addr_list=map(lambda x:x.addr, peer_list)
     for addr in addr_list:
         if not addr in addr_files:
@@ -59,8 +60,8 @@ def refDel(peer_list):
 
 def startFTD():
     global inxr
-    inxr=FileIndexer(path)
     path=sys.argv[1]
+    inxr=FileIndexer(path)
     reactor.listenTCP(17395, IFFactory(inxr))
 
 def startPD():
@@ -80,14 +81,14 @@ def getInput():
         assoc_list={}
         it=0
         for addr in addr_files.keys():
-            fHT=addr_files[keys]
+            fHT=addr_files[addr]
             for (k,v) in fHT.iteritems():
                 assoc_list[it]=addr,k
-                it+=1
                 print it,':',' - '.join(map(str,v))
+                it+=1
         num=int(raw_input('Enter file index: '))
         addr,fHash=assoc_list[num]
-        getFile(addr, fHash)
+        getFile(addr, fHash, addr_files[addr][fHash][0])
 
 def main():
     startFTD()
