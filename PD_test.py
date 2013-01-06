@@ -2,7 +2,7 @@
 
 from LPDoL.multicast import Inducter
 from LPDoL.handler import MessageHandler
-from LPDoL.common import Peer
+from LPDoL.common import *
 from uuid import uuid1
 from twisted.internet import reactor
 
