@@ -1,0 +1,99 @@
+from FiT.indexer import *
+from FiT.daemon import *
+if os.name == 'posix':
+    try:
+        from twisted.internet import glib2reactor
+        glib2reactor.install()
+    except:
+        try:
+            from twisted.internet import cfreactor
+            cfreactor.install()
+        except:
+            print 'No platform specific reactor found!'
+
+from twisted.internet import reactor
+from FiT.probe import *
+import sys
+from LPDoL.multicast import Inducter
+from LPDoL.handler import MessageHandler
+from LPDoL.common import *
+from uuid import uuid1
+
+addr_files={}
+inxr=None
+
+def bindfHT(addr, success, fHT):
+    if success:
+        addr_files[addr]=fHT
+    else:
+        print 'Failed to get HT'
+
+def getFile(addr, fHash):
+    global inxr
+    f=inxr.saveFile(fHT[fileHash][0])
+    reactor.connectTCP(addr, 17395, FTFactory(fileHash, f, doneCb))
+
+def doneCb(success):
+    print 'File Transfer done: ', success
+
+def getFileHT(addr):
+    fHTFn=lambda x,y: bindfHT(addr, x,y)
+    reactor.connectTCP(addr, 17395, FHFactory(fHTFn))
+
+def refAdd(peer_list):
+    addr_list=map(lambda x:x.addr, peer_list)
+    for addr in addr_list:
+        if not addr in addr_files:
+            print 'Updating global file index'
+            try:
+                getFileHT(addr)
+            except Exception as e:
+                print 'Failed to retrieve from address due to {0}'.format(e)
+
+
+def refDel(peer_list):
+    addr_list=map(lambda x:x.addr, peer_list)
+    for addr in addr_files.keys():
+        if not addr in addr_list:
+            del addr_files[addr]
+
+def startFTD():
+    global inxr
+    inxr=FileIndexer(path)
+    path=sys.argv[1]
+    reactor.listenTCP(17395, IFFactory(inxr))
+
+def startPD():
+    p=Peer(uid=uuid1().hex, name='anon',addr='127.0.0.1')
+    p_l=PeerContainer(refAdd, refDel)
+    i=Inducter(('224.0.2.38',8999))
+    reactor.listenMulticast(8999,i)
+    h=MessageHandler(p, i.broadcast, p_l)
+    i.addHandler(h.handle)
+
+def getInput():
+    while 1:
+        q=raw_input(': _list_ : - ')
+        if q == 'n': 
+            reactor.stop()
+            break
+        assoc_list={}
+        it=0
+        for addr in addr_files.keys():
+            fHT=addr_files[keys]
+            for (k,v) in fHT.iteritems():
+                assoc_list[it]=addr,k
+                it+=1
+                print it,':',' - '.join(map(str,v))
+        num=int(raw_input('Enter file index: '))
+        addr,fHash=assoc_list[num]
+        getFile(addr, fHash)
+
+def main():
+    startFTD()
+    startPD()
+    reactor.callInThread(getInput)
+    reactor.run()
+
+if __name__ == '__main__':
+    main()
