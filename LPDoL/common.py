@@ -1,5 +1,5 @@
 from collections import namedtuple
-
+from twisted.internet import reactor
 INVALID_CHARS=[';',':','\\','/',' ','\'','\"',',']
 
 def validate_uid(uid):
