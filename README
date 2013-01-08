@@ -32,3 +32,12 @@ Command codes are:-
 2. LOAD_FILE: Loads the file and waits to begin transfer
 3. START_TRANSFER: Denotes the byte range of data to be transferred
 4. ERROR: ERR!
+
+
+Running:-
+Install python2 and twisted-python 
+In the main directory, run:
+# python ALL_test.py /dir/to/sharing-folder
+All files will be shared
+You will be alerted when a new peer joins the network and press any key to list files
+Press 'n' to disconnect
