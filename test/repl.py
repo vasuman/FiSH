@@ -1,14 +1,14 @@
 import os
-#if os.name == 'posix':
-#    try:
-#        from twisted.internet import glib2reactor
-#        glib2reactor.install()
-#    except Exception,e:
-#        try:
-#            from twisted.internet import cfreactor
-#            cfreactor.install()
-#        except Exception,e:
-#            print 'No platform specific reactor found!'
+if os.name == 'posix':
+    try:
+        from twisted.internet import glib2reactor
+        glib2reactor.install()
+    except Exception,e:
+        try:
+            from twisted.internet import cfreactor
+            cfreactor.install()
+        except Exception,e:
+            print 'No platform specific reactor found!'
 from FiT.indexer import *
 from FiT.daemon import *
 from twisted.internet import reactor
@@ -21,7 +21,7 @@ from uuid import uuid1
 
 run_string='''Use the following commands:-
 list - list the global file index
-ref - refresh the local file index
+refresh - refresh the local file index
 exit - self explanatory!'''
 
 addr_files={}
@@ -84,10 +84,11 @@ def prompt():
         q=raw_input('>>')
         if q == 'exit': 
             reactor.stop()
+            print 'Exiting.....'
             break
         elif q == 'list':
             handleFT()
-        elif q == 'ref':
+        elif q == 'refresh':
             inxr._generate_index()
             print 'Local file index refreshed'
             
@@ -101,7 +102,8 @@ def handleFT():
             print it,':',' - '.join(map(str,v))
             it+=1
     if assoc_list != {}:
-        num=int(raw_input('Enter file index: '))
+        num=int(raw_input('Enter file index [-1 to cancel]: '))
+        if num == -1: return
         addr,fHash=assoc_list[num]
         getFile(addr, fHash, addr_files[addr][fHash][0])
     else:
