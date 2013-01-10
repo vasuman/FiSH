@@ -3,9 +3,6 @@ from twisted.internet.protocol import ClientFactory, Protocol
 from twisted.internet import reactor
 import json
 from common import *
-from zope.interface import implements
-from twisted.internet.interfaces import IConsumer
-from twisted.internet.defer import Deferred
 
 EVENT_CODES={
     0:'FILES_LISTED',
