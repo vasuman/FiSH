@@ -36,6 +36,7 @@ class MessageHandler(object):
         self.peer_list.discard(source_peer)
 
     def handle(self,data,ip):
+        '''A sink that '''
         try:
             message=PDMessage(message_str=data)
         except MessageException as e:

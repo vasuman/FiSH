@@ -10,8 +10,11 @@ class MessageException(Exception):
 
 
 class MessageContext(object):
+    '''Contains all nessecary variables to generate and validate LMessages'''
     def __init__(self, family, message_codes={}, key_multiple=[], no_arg=[]):
+        #Family relates a class of messages
         self.family = family
+        
         #The MSG_CODES_VALID variable stores the names and validation functions 
         #for the corresponding keys in the form of a two member tuple
         self.MSG_CODES_VALID=message_codes
@@ -24,15 +27,17 @@ class MessageContext(object):
         
 class LMessage(object):
     '''All communication between peers is done by objects of this class'''
-    def __init__(self, key=None, data=None, message_str=None, context=None):
+    def __init__(self, key=None, data=None, message_str=None):
         '''Creates a message object from key and data
         key -- int : refer MSG_CODES_VALID variable
         data -- list of data members
+        message_str -- str : parses a given message string
+        context -- MessageContext : class containing family specific information
         If a message_str is passed other values are neglected
         Creates a message object from string of form 
             <key>:<data>'''
-        assert type(context) == MessageContext, 'Must be a valid context'
-        self.context=context
+        #The derived class must have a context!!!
+        assert type(self.context) == MessageContext, 'Must be a valid context'
         if not message_str is None:
             key,data=self._parse_message(message_str)
         #Standard validation of key and data

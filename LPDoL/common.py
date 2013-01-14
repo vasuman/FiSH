@@ -1,5 +1,9 @@
 from collections import namedtuple
 from twisted.internet import reactor
+from util.message import *
+
+#Defining all message validation functions below
+
 INVALID_CHARS=[';',':','\\','/',' ','\'','\"',',']
 
 def validate_uid(uid):
@@ -30,6 +34,8 @@ def validate_identity(id_tuple):
     uid,name=id_tuple
     return validate_name(name) and validate_uid(uid)
 
+#Defining a message context below
+
 MSG_CODES_VALID={
         1:('HOOK',validate_identity),
         2:('UNHOOK',validate_identity),
@@ -37,13 +43,16 @@ MSG_CODES_VALID={
 
 KEY_MUL_MEM=[1]
 
-from util.message import *
 
 LPDoL_context=MessageContext(family='LPDOL', message_codes=MSG_CODES_VALID, key_multiple=KEY_MUL_MEM)
 
+
 class PDMessage(LMessage):
+    '''Special module designed to transmit dynDNS messages on multicast 
+    -- initiates all messages with LPDoL context'''
     def __init__(self, *args, **kwargs):
-        super(PDMessage, self).__init__(context=LPDoL_context, *args, **kwargs)
+        self.context=LPDoL_context
+        super(PDMessage, self).__init__(*args, **kwargs)
 
 Peer=namedtuple('Peer','uid addr name')
 
@@ -76,12 +85,10 @@ class LPDoLError(Exception):
         self.message=message
 
 class PeerDiscoveryError(LPDoLError):
+    '''Instantiated when errors thrown by handler'''
     def __str__(self):
         return 'Peer Discovery Failure - [ERROR {0.err}]: {0.message}'.format(self)
 
 class MulticastError(LPDoLError):
     def __str__(self):
         return 'Socket Error - [ERROR {0.err}]: {0.message}'.format(self)
-
-
-

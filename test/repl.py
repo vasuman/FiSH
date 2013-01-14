@@ -1,14 +1,14 @@
-import os
-if os.name == 'posix':
-    try:
-        from twisted.internet import glib2reactor
-        glib2reactor.install()
-    except Exception,e:
-        try:
-            from twisted.internet import cfreactor
-            cfreactor.install()
-        except Exception,e:
-            print 'No platform specific reactor found!'
+#import os
+#if os.name == 'posix':
+#    try:
+#        from twisted.internet import glib2reactor
+#        glib2reactor.install()
+#    except Exception,e:
+#        try:
+#            from twisted.internet import cfreactor
+#            cfreactor.install()
+#        except Exception,e:
+#            print 'No platform specific reactor found!'
 from FiT.indexer import *
 from FiT.daemon import *
 from twisted.internet import reactor
@@ -50,7 +50,7 @@ def refAdd(peer_list):
     addr_list=map(lambda x:x.addr, peer_list)
     for addr in addr_list:
         if not addr in addr_files:
-            inform('Found peer at {0}'.format(addr))
+            inform('Exploring peer at {0}'.format(addr))
             try:
                 getFileHT(addr)
             except Exception as e:

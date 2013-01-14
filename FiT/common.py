@@ -1,4 +1,5 @@
 #common.py
+from util.message import *
 
 def is_error(error_tup):
     if not len(error_tup) == 2:
@@ -40,13 +41,12 @@ MSG_CODES_VALID={
 
 NO_PARAM=[1]
 
-from util.message import *
-
 FIT_context=MessageContext(family='FIT', message_codes=MSG_CODES_VALID, no_arg=NO_PARAM)
 
 class FiTMessage(LMessage):
     def __init__(self, *args, **kwargs):
-        super(FiTMessage, self).__init__(context=FIT_context, *args, **kwargs)
+        self.context=FIT_context
+        super(FiTMessage, self).__init__(*args, **kwargs)
         
 from twisted.internet.protocol import Protocol
 
