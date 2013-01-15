@@ -76,5 +76,5 @@ class IFFactory(Factory):
         self.inx=indexer
 
     def buildProtocol(self, addr):
-        logging.info('Incoming connection from {0}'.format(str(addr)))
+        logging.info('Incoming connection from {0.host}'.format(addr))
         return FileShareDaemon(self.inx)
