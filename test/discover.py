@@ -8,6 +8,7 @@ from twisted.internet import reactor
 
 def cb(x):
 	print x
+	
 if __name__ == '__main__':
 	p=Peer(uid=uuid1().hex, name='anon',addr='127.0.0.1')
 	p_l=PeerContainer(cb, cb)

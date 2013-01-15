@@ -18,6 +18,7 @@ from LPDoL.multicast import Inducter
 from LPDoL.handler import MessageHandler
 from LPDoL.common import *
 from uuid import uuid1
+import logging
 
 run_string='''Use the following commands:-
 list - list the global file index
@@ -110,6 +111,7 @@ def handleFT():
         print 'No files available'
 
 def main():
+    logging.basicConfig(level=logging.DEBUG)
     startFTD()
     startPD()
     print run_string
