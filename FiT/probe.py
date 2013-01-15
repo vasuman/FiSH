@@ -49,6 +49,7 @@ class FileTransfer(StreamLineProtocol):
             elif msg.key != 3:
                 raise Exception('Wrong Code')
         except Exception as e:
+            print e
             self.transport.loseConnection()
             return
         self.fSize=int(msg.data[0][0])

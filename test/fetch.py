@@ -1,3 +1,5 @@
+from twisted.internet import glib2reactor
+glib2reactor.install()
 import os
 from twisted.internet import reactor
 from FiT.probe import *
