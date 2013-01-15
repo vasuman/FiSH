@@ -11,13 +11,14 @@ Dependancies
 Running 
 -------
 In the main directory, run:
-`$ python -m test.repl /dir/to/sharing-folder`
+`$ python -m test.prompt /dir/to/sharing-folder`
 All files in the specified directory will be shared.
 On running, you will be presented with a prompt 
 
 `>>`
 
 Where you can enter commands that will be evaluated
+
 ####Commands
 1.`list` - Lists *all* indexed files of *all* discovered peers
 
@@ -27,8 +28,6 @@ Where you can enter commands that will be evaluated
 
 Author
 ------
->_Name:_  Vasuman Ravichandran
-
->_e-mail:_ <vasumanar@gmail.com>
+>Vasuman Ravichandran (<vasumanar@gmail.com>)
 
 [twisted-python]:http://twistedmatrix.com/trac/

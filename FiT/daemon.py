@@ -7,7 +7,7 @@ from indexer import *
 import logging
 
 MAX_ERR_COUNT=5
-
+logging.basicConfig(level=logging.DEBUG)
 class FileShareDaemon(StreamLineProtocol):
     def __init__(self, file_indexer):
         StreamLineProtocol.__init__(self)
