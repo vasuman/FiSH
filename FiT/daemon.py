@@ -7,7 +7,6 @@ from indexer import *
 import logging
 
 MAX_ERR_COUNT=5
-logging.basicConfig(level=logging.DEBUG)
 class FileShareDaemon(StreamLineProtocol):
     def __init__(self, file_indexer):
         StreamLineProtocol.__init__(self)
@@ -30,6 +29,7 @@ class FileShareDaemon(StreamLineProtocol):
             self._failure((1,'INVALID_REQUEST'))
 
     def _dump_file_HT(self, _discard):
+        logging.info('Dumped file index')
         self.sendLine(self.indexer.reduced_index())
     
     def _load_file(self, fileMsg):
@@ -50,6 +50,7 @@ class FileShareDaemon(StreamLineProtocol):
             logging.info('Started file transfer')
             self.busy=True
             fileProducer=FileSender()
+            fileProducer.CHUNK_SIZE=65536
             def_obj=fileProducer.beginFileTransfer(file=self.fileObj, consumer=self.transport)
             def_obj.addCallback(self._done_transfer, True)
             def_obj.addErrback(self._done_transfer, False)
