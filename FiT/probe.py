@@ -10,9 +10,8 @@ EVENT_CODES={
 }
         
 class HashListRetrieve(StreamLineProtocol):
-    def __init__(self, callbackListing):
+    def __init__(self):
         StreamLineProtocol.__init__(self)
-        self.cbFn=callbackListing
 
     def connectionMade(self):
         self.sendLine(FiTMessage(1,[]))
@@ -25,15 +24,14 @@ class HashListRetrieve(StreamLineProtocol):
         except:
             success=False
         self.transport.loseConnection()
-        reactor.callInThread(self.cbFn, success, fileHT)
+        self.factory.got_HT(success, fileHT)
   
 class FileTransfer(StreamLineProtocol):
-    def __init__(self, fileHash, f_container, callbackListing):
+    def __init__(self, fileHash, f_container):
         StreamLineProtocol.__init__(self)
         self.fileHash=fileHash
         self.fObj=f_container
         self.retFn=self._FTReply
-        self.cbFn=callbackListing
 
     def connectionMade(self):
         self.sendLine(FiTMessage(2,[(self.fileHash,)]))
@@ -49,8 +47,8 @@ class FileTransfer(StreamLineProtocol):
             elif msg.key != 3:
                 raise Exception('Wrong Code')
         except Exception as e:
-            print e
             self.transport.loseConnection()
+            self.transport.got_file(False)
             return
         self.fSize=int(msg.data[0][0])
         reply_msg=FiTMessage(3,[(str(self.fSize),)])
@@ -63,20 +61,47 @@ class FileTransfer(StreamLineProtocol):
         if self.fSize <= 0:
             self.fObj.close()
             self.transport.loseConnection()
-            reactor.callInThread(self.cbFn, True)
+            self.factory.got_file(True)
+            
 
 class FHFactory(ClientFactory):
-    def __init__(self, callback):
-        self.callback=callback
+    protocol=HashListRetrieve
+    def __init__(self, def_obj):
+        self.def_obj=def_obj
 
-    def buildProtocol(self, addr):
-        return HashListRetrieve(self.callback)
+    def got_HT(self, success, fileHT):
+        if self.def_obj is not None:
+            d, self.def_obj = self.def_obj, None
+            if success:    
+                d.callback(fileHT)
+            else:
+                d.errback('Faulty server')
+
+    def clientConnectionFailed(self, connector, reason):
+        if self.def_obj is not None:
+            d, self.def_obj = self.def_obj, None
+            d.errback(reason)
 
 class FTFactory(ClientFactory):
-    def __init__(self, fHash, f_container, cbFn):
+    def __init__(self, fHash, f_container, def_obj):
         self.fHash=fHash
         self.fObj=f_container
-        self.callback=cbFn
+        self.def_obj=def_obj
 
+    def got_file(self, success):
+        if self.def_obj is not None:
+            d, self.def_obj = self.def_obj, None
+            if success:    
+                d.callback(True)
+            else:
+                d.errback('Faulty server')
+        
     def buildProtocol(self, addr):
-        return FileTransfer(self.fHash, self.fObj, self.callback)
+        ftInst=FileTransfer(self.fHash, self.fObj)
+        ftInst.factory=self
+        return ftInst
+
+    def clientConnectionFailed(self, connector, reason):
+        if self.def_obj is not None:
+            d, self.def_obj = self.def_obj, None
+            d.errback(reason)
