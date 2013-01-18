@@ -75,6 +75,8 @@ class FileIndexer(object):
                 #Generate SHA1 sum of file -- is kinda slow
                 with open(filename,'rb') as file_obj:
                     sha1sum=sha1(file_obj.read()).hexdigest()
+                if sha1sum in self.hash_index.keys():
+                    continue
                 ftObj=FileObject(chksum=sha1sum, path=filename, size=file_size)
                 #Associate file hash with filename and size
                 self.hash_index[sha1sum]=ftObj
@@ -91,7 +93,7 @@ class FileIndexer(object):
             chksum=self.path_index[filepath]
         elif not chksum is None:
             filepath=self.hash_index[chksum].name
-        del self.hash_index[msg_d]
+        del self.hash_index[chksum]
         del self.path_index[filepath]
 
 
