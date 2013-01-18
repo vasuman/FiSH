@@ -1,17 +1,8 @@
-#import os
-#if os.name == 'posix':
-#    try:
-#        from twisted.internet import glib2reactor
-#        glib2reactor.install()
-#    except Exception,e:
-#        try:
-#            from twisted.internet import cfreactor
-#            cfreactor.install()
-#        except Exception,e:
-#            print 'No platform specific reactor found!'
 from FiT.indexer import *
 from FiT.daemon import *
 from twisted.internet import reactor
+from twisted.internet.defer import Deferred
+from twisted.internet.threads import deferToThread
 from FiT.probe import *
 import sys
 from LPDoL.multicast import Inducter
@@ -28,24 +19,29 @@ exit - self explanatory!'''
 addr_files={}
 inxr=None
 
-def bindfHT(addr, success, fHT):
-    if success:
-        addr_files[addr]=fHT
-    else:
-        print 'Failed to get HT'
+def bindfHT(addr, fHT):
+    addr_files[addr]=fHT
 
 def getFile(addr, fHash, name):
     global inxr
     f=inxr.saveFile(name)
-    reactor.connectTCP(addr, 17395, FTFactory(fHash, f, doneCb))
+    d=Deferred()
+    d.addCallback(doneCb)
+    d.addErrback(failed)
+    reactor.connectTCP(addr, 17395, FTFactory(fHash, f, d))
 
 def doneCb(success):
-    if success: inform('Succesfull file transfer')
-    else: inform('File transfer failure')
+    inform('Succesfull file transfer')
 
 def getFileHT(addr):
-    fHTFn=lambda x,y: bindfHT(addr, x,y)
-    reactor.connectTCP(addr, 17395, FHFactory(fHTFn))
+    fHTFn=lambda x: bindfHT(addr, x)
+    d=Deferred()
+    d.addCallback(fHTFn)
+    d.addErrback(failed)
+    reactor.connectTCP(addr, 17395, FHFactory(d))
+
+def failed(reason):
+    print reason
 
 def refAdd(peer_list):
     addr_list=map(lambda x:x.addr, peer_list)
@@ -58,7 +54,7 @@ def refAdd(peer_list):
                 print 'Failed to retrieve from address due to {0}'.format(e)
 
 def inform(info):
-    print '\n'+info
+    print '\n'+info+'>>'
 
 def refDel(peer_list):
     addr_list=map(lambda x:x.addr, peer_list)
@@ -111,11 +107,11 @@ def handleFT():
         print 'No files available'
 
 def main():
-    logging.basicConfig(level=logging.DEBUG)
+    logging.basicConfig(level=logging.INFO)
     startFTD()
     startPD()
     print run_string
-    reactor.callInThread(prompt)
+    deferToThread(prompt)
     reactor.run()
 
 if __name__ == '__main__':

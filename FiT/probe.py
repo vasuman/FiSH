@@ -75,7 +75,7 @@ class FHFactory(ClientFactory):
             if success:    
                 d.callback(fileHT)
             else:
-                d.errback('Faulty server')
+                d.errback('Parsing JSON error')
 
     def clientConnectionFailed(self, connector, reason):
         if self.def_obj is not None:
@@ -94,7 +94,7 @@ class FTFactory(ClientFactory):
             if success:    
                 d.callback(True)
             else:
-                d.errback('Faulty server')
+                d.errback('Truncted file transfer')
         
     def buildProtocol(self, addr):
         ftInst=FileTransfer(self.fHash, self.fObj)
