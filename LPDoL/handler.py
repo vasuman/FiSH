@@ -43,6 +43,8 @@ class MessageHandler(object):
             return -1
         logging.debug('Recieved {0} from {1}'.format(repr(message), ip))
         source_uid, source_name=message.data[0]
+	if source_uid == self.host.uid:
+		return 0
         source_peer=Peer(uid=source_uid, name=source_name, addr=ip[0])
         self.FUNC_CODES[message.key](source_peer, message)
         
