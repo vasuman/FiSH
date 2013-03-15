@@ -5,6 +5,7 @@ A simple file transfer program that requires zero configuration. It discovers pe
 
 ##Dependencies
 - [Twisted][twisted-python] - A web-framework for python
+
 ##Basic Concepts
 * Each Peer is assigned a unique UID -- 16 byte string, and a name chosen by the user. From now on the string "&lt;UID&gt;.&lt;name&gt;" refers to the "ident\_string" of the peer the uniquely identifies each peer.
 
@@ -30,11 +31,11 @@ A custom message serialization module. Each message has to be instantiated with 
 Each message has a "_code_" and a list which consists of "_data items_". Each "_data item_" is a tuple consisting of multiple "_data members_". This shallow fixed nesting is a result of the realization that two levels is as deep as it goes. 
 Messages are represented as:-
 
-`<message>` :- `<key>:<items>`
+`<message>` **::** `<key>:<items>`
 
-`<items>` :- `<item-1>;<item-2>;(.ad infinitum.);<item-n>`
+`<items>` **::** `<item-1>;<item-2>;(..);<item-n>`
 
-`<item>` :- `<member-1>.<member-2>.(.ad infinitum.).<member-n>`
+`<item>` **::** `<member-1>.<member-2>.(..).<member-n>`
 
 Every message is base64 encoded on serialization. A message can be instantiated from a base64 encoded string on the transport endpoint
 
