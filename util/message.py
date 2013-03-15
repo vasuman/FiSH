@@ -1,3 +1,5 @@
+from base64 import b64encode, b64decode
+
 class MessageException(Exception):
     '''Prevents mutated or malicious messages'''
     def __init__(self, err, message):
@@ -56,7 +58,7 @@ class LMessage(object):
     def __str__(self):
         '''Returns a serialized representation of object of form
             <key>:<data>'''
-        return str(self.key)+':'+';'.join(['.'.join(map(str,it)) for it in self.data])
+        return b64encode(str(self.key)+':'+';'.join(['.'.join(map(str,it)) for it in self.data]))
                 
     def _validate_message(self,key,data):
         #Checking if <key> is valid index
@@ -77,6 +79,10 @@ class LMessage(object):
                 raise MessageException(6,'Too many members')
 
     def _parse_message(self,message):
+        try:
+            message=b64decode(message)
+        except:
+            raise MessageException(0,'String not base64')
         #Checking for class seperator
         if not ':' in message:
             raise MessageException(1,'Malformed message string')
