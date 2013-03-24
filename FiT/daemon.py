@@ -74,6 +74,7 @@ class FileShareDaemon(StreamLineProtocol):
         
 class IFFactory(Factory):
     def __init__(self, indexer):
+        logging.info('Daemon factory started')
         self.inx=indexer
 
     def buildProtocol(self, addr):

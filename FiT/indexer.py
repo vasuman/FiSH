@@ -12,6 +12,8 @@ FileObject=namedtuple('FileObject', 'chksum path size')
 CHKSUM=0
 FNAME=1
 
+INDEX_FILE='.findex'
+
 class FileIndexer(object):
     '''The FileIndexer class generates two indexes(dictionary) of all filenames 
     with their SHA1 checksums and absolute pathnames as keys and a 
@@ -41,23 +43,24 @@ class FileIndexer(object):
         logging.info('All files indexed')
 
     def _open_prev_index(self):
-        index_file=os.path.join(self.path, '.findex')
+        index_file=os.path.join(self.path, INDEX_FILE)
         if not os.path.exists(index_file):
-            logging.warn('No .findex found!!')
+            logging.warn('No index file found!!')
             raise IndexerException(6,'No existing index')
         return file(index_file,'rb').read()
 
     def _save_index(self):
-        index_file=os.path.join(self.path, '.findex')
+        index_file=os.path.join(self.path, INDEX_FILE)
         with open(index_file,'wb') as fObj:
             fObj.write(pickle.dumps([self.hash_index, self.path_index]))
         logging.info('Index file written')
 
     def _generate_index(self):
+        logging.info('Regenerating file index')
         for item in os.walk(self.path):
             base_dir, _discard, basenames=item
             for basename in basenames:
-                if basename == '.findex':
+                if basename == INDEX_FILE:
                     continue
                 filename=os.path.join(base_dir,basename)
                 #Skip broken symlinks!

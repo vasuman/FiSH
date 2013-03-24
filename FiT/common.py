@@ -7,7 +7,6 @@ def is_error(error_tup):
     try:
         code, msg=error_tup
         code=int(code)
-        assert type(msg)==str
     except:
         return False
     return True
