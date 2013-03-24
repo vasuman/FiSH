@@ -1,4 +1,8 @@
 *.pyc
 *.swp
 *.swo
+
+settings.json
+.findex
+
 testing/
