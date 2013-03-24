@@ -18,7 +18,6 @@ def validate_uid(uid):
     return True
 
 def validate_name(name_str):
-    assert type(name_str)==str, 'Name must be a string'
     #Must not exceed maximum length
     if len(name_str)>25:
         return False
@@ -56,27 +55,27 @@ class PDMessage(LMessage):
 
 Peer=namedtuple('Peer','uid addr name')
 
-class PeerContainer(list):
+class PeerContainer(object):
     def __init__(self, onAdd, onDel):
-        super(PeerContainer, self).__init__()
+        self.items=[]
         self.aT=onAdd
         self.dT=onDel
 
     def add(self, peer_obj):
         flag=True
-        for item in self:
+        for item in self.items:
             if item.addr == peer_obj.addr:
-                self.remove(item)
+                self.items.remove(item)
                 flag=False
-        self.append(peer_obj)
+        self.items.append(peer_obj)
         if flag:
-            reactor.callInThread(self.aT, self)
+            reactor.callInThread(self.aT, self.items)
 
     def discard(self, peer_obj):    
-        for item in self:
+        for item in self.items:
             if item.addr == peer_obj.addr:
-                self.remove(item)
-                reactor.callInThread(self.dT, self)
+                self.items.remove(item)
+                reactor.callInThread(self.dT, self.items)
 
 class LPDoLError(Exception):
     '''Base Error class -- all other exceptions inherit from this'''

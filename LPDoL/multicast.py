@@ -24,8 +24,6 @@ class Inducter(DatagramProtocol):
         
     def addHandler(self, handleFn):
         '''Add a function to handle incoming multicast messages'''
-        if not callable(handleFn):
-            raise MulticastError(1,'Supplied handler is not callable')
         self.callingFunction=handleFn
 
     def datagramReceived(self, datagram, addr):

@@ -11,7 +11,9 @@ class MessageHandler(object):
         self.op_func=ofstream
         self.host=host_peer
         self.peer_list=peer_list
+        self.enabled=True
         self.hook_gap=1
+        self.hook_ID=None
         #Mapping message keys to handling functions
         self.FUNC_CODES={
             1:self._respond_hook,
@@ -36,37 +38,68 @@ class MessageHandler(object):
         self.peer_list.discard(source_peer)
 
     def handle(self,data,ip):
-        '''A sink that '''
+        '''A sink that accepts incoming Peer Discovery data'''
+        if not self.enabled:
+            return -2
         try:
             message=PDMessage(message_str=data)
         except MessageException as e:
             return -1
-        logging.debug('Recieved {0} from {1}'.format(repr(message), ip))
         source_uid, source_name=message.data[0]
-	if source_uid == self.host.uid:
-		return 0
+        if source_uid == self.host.uid:
+            logging.debug('Loopback. Ehh!')
+            return -3
+        logging.debug('Recieved {0} from {1}'.format(repr(message), ip))
         source_peer=Peer(uid=source_uid, name=source_name, addr=ip[0])
         self.FUNC_CODES[message.key](source_peer, message)
         
     def hook(self):
         '''Broadcasts a LPDOL_HOOK on Multicast group with exponential time delays'''
+        if not self.enabled:
+            return
         #Generate list of peer UIDs
-        peer_uid=map(repr_peer, self.peer_list)
+        peer_uid=map(repr_peer, self.peer_list.items)
         #Prefix host UID to list
         peer_uid.insert(0,repr_peer(self.host))
         message=PDMessage(1,peer_uid)
-        self.op_func(message)
+        logging.debug('Hooking..')
+        self.write(message)
         #Generate next time gap -- Exponential back-off
         if self.hook_gap < 256: self.hook_gap*=2
         #Register trigger with reactor
-        reactor.callLater(self.hook_gap, self.hook)
+        self.hook_ID=reactor.callLater(self.hook_gap, self.hook)
 
     def live(self):
         '''Asserts existance by broadcasting LPDOL_LIVE'''
         message=PDMessage(3,[repr_peer(self.host)])
-        self.op_func(message)
+        logging.debug('Asserting life.')
+        self.write(message)
 
     def unhook(self):
         '''Broadcasts a LPDOL_UNHOOK message before disconnecting'''
+        if not self.enabled:
+            return
         message=PDMessage(2,[repr_peer(self.host)])
-        self.op_func(message)
+        logging.debug('Unhooking from swarm.')
+        self.write(message)
+
+    def setOutputStream(self, fn):
+        self.op_func=fn
+
+    def write(self, message):
+        if not self.enabled:
+            return
+        try:
+            self.op_func(message)
+        except Exception as e:
+            logging.error('Unable to write messages: '+str(e))
+
+    def resetAll(self):
+        self.hook_gap=1
+        self.peer_list.items=[]
+        self.enabled=True
+        try:
+            self.hook_ID.cancel()
+        except:
+            pass
+        self.hook()
