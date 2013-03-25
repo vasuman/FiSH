@@ -1,0 +1,155 @@
+# -*- coding: utf-8 -*-
+
+# Form implementation generated from reading ui file '../UI/fish.ui'
+#
+# Created: Mon Mar 25 10:59:56 2013
+#      by: PyQt4 UI code generator 4.10
+#
+# WARNING! All changes made in this file will be lost!
+
+from PyQt4 import QtCore, QtGui
+
+try:
+    _fromUtf8 = QtCore.QString.fromUtf8
+except AttributeError:
+    def _fromUtf8(s):
+        return s
+
+try:
+    _encoding = QtGui.QApplication.UnicodeUTF8
+    def _translate(context, text, disambig):
+        return QtGui.QApplication.translate(context, text, disambig, _encoding)
+except AttributeError:
+    def _translate(context, text, disambig):
+        return QtGui.QApplication.translate(context, text, disambig)
+
+class Ui_MainWindow(object):
+    def setupUi(self, MainWindow):
+        MainWindow.setObjectName(_fromUtf8("MainWindow"))
+        MainWindow.setWindowModality(QtCore.Qt.NonModal)
+        MainWindow.setEnabled(True)
+        MainWindow.resize(600, 500)
+        MainWindow.setMinimumSize(QtCore.QSize(600, 500))
+        MainWindow.setMaximumSize(QtCore.QSize(16777215, 16777215))
+        icon = QtGui.QIcon()
+        icon.addPixmap(QtGui.QPixmap(_fromUtf8(":/app/icons/FiSH.png")), QtGui.QIcon.Normal, QtGui.QIcon.Off)
+        MainWindow.setWindowIcon(icon)
+        self.centralwidget = QtGui.QWidget(MainWindow)
+        self.centralwidget.setObjectName(_fromUtf8("centralwidget"))
+        self.gridLayout = QtGui.QGridLayout(self.centralwidget)
+        self.gridLayout.setObjectName(_fromUtf8("gridLayout"))
+        self.tableView_2 = QtGui.QTableView(self.centralwidget)
+        self.tableView_2.setMaximumSize(QtCore.QSize(16777215, 125))
+        self.tableView_2.setShowGrid(False)
+        self.tableView_2.setObjectName(_fromUtf8("tableView_2"))
+        self.gridLayout.addWidget(self.tableView_2, 4, 0, 1, 4)
+        self.frame = QtGui.QFrame(self.centralwidget)
+        self.frame.setMinimumSize(QtCore.QSize(0, 0))
+        self.frame.setMaximumSize(QtCore.QSize(200, 16777215))
+        self.frame.setFrameShape(QtGui.QFrame.Box)
+        self.frame.setFrameShadow(QtGui.QFrame.Raised)
+        self.frame.setObjectName(_fromUtf8("frame"))
+        self.verticalLayout = QtGui.QVBoxLayout(self.frame)
+        self.verticalLayout.setObjectName(_fromUtf8("verticalLayout"))
+        self.label = QtGui.QLabel(self.frame)
+        font = QtGui.QFont()
+        font.setPointSize(14)
+        font.setBold(True)
+        font.setItalic(False)
+        font.setUnderline(False)
+        font.setWeight(75)
+        font.setStrikeOut(False)
+        font.setKerning(True)
+        self.label.setFont(font)
+        self.label.setObjectName(_fromUtf8("label"))
+        self.verticalLayout.addWidget(self.label)
+        self.listView = QtGui.QListView(self.frame)
+        self.listView.setEnabled(True)
+        self.listView.setAlternatingRowColors(True)
+        self.listView.setObjectName(_fromUtf8("listView"))
+        self.verticalLayout.addWidget(self.listView)
+        self.gridLayout.addWidget(self.frame, 0, 0, 3, 1)
+        self.lineEdit = QtGui.QLineEdit(self.centralwidget)
+        self.lineEdit.setObjectName(_fromUtf8("lineEdit"))
+        self.gridLayout.addWidget(self.lineEdit, 0, 2, 1, 2)
+        self.radioButton = QtGui.QRadioButton(self.centralwidget)
+        self.radioButton.setChecked(True)
+        self.radioButton.setObjectName(_fromUtf8("radioButton"))
+        self.gridLayout.addWidget(self.radioButton, 1, 3, 1, 1)
+        self.tableView = QtGui.QTableView(self.centralwidget)
+        sizePolicy = QtGui.QSizePolicy(QtGui.QSizePolicy.Expanding, QtGui.QSizePolicy.Expanding)
+        sizePolicy.setHorizontalStretch(1)
+        sizePolicy.setVerticalStretch(0)
+        sizePolicy.setHeightForWidth(self.tableView.sizePolicy().hasHeightForWidth())
+        self.tableView.setSizePolicy(sizePolicy)
+        self.tableView.setMaximumSize(QtCore.QSize(16777215, 16777215))
+        self.tableView.setFrameShape(QtGui.QFrame.NoFrame)
+        self.tableView.setFrameShadow(QtGui.QFrame.Sunken)
+        self.tableView.setHorizontalScrollBarPolicy(QtCore.Qt.ScrollBarAsNeeded)
+        self.tableView.setAlternatingRowColors(True)
+        self.tableView.setSelectionMode(QtGui.QAbstractItemView.SingleSelection)
+        self.tableView.setSelectionBehavior(QtGui.QAbstractItemView.SelectRows)
+        self.tableView.setShowGrid(False)
+        self.tableView.setGridStyle(QtCore.Qt.DotLine)
+        self.tableView.setSortingEnabled(True)
+        self.tableView.setObjectName(_fromUtf8("tableView"))
+        self.tableView.horizontalHeader().setCascadingSectionResizes(False)
+        self.tableView.horizontalHeader().setDefaultSectionSize(65)
+        self.tableView.horizontalHeader().setMinimumSectionSize(10)
+        self.tableView.horizontalHeader().setSortIndicatorShown(True)
+        self.tableView.horizontalHeader().setStretchLastSection(False)
+        self.tableView.verticalHeader().setVisible(False)
+        self.gridLayout.addWidget(self.tableView, 2, 2, 1, 2)
+        self.radioButton_2 = QtGui.QRadioButton(self.centralwidget)
+        self.radioButton_2.setChecked(False)
+        self.radioButton_2.setObjectName(_fromUtf8("radioButton_2"))
+        self.gridLayout.addWidget(self.radioButton_2, 1, 2, 1, 1)
+        spacerItem = QtGui.QSpacerItem(20, 20, QtGui.QSizePolicy.Fixed, QtGui.QSizePolicy.Minimum)
+        self.gridLayout.addItem(spacerItem, 0, 1, 1, 1)
+        spacerItem1 = QtGui.QSpacerItem(20, 20, QtGui.QSizePolicy.Minimum, QtGui.QSizePolicy.Fixed)
+        self.gridLayout.addItem(spacerItem1, 3, 0, 1, 1)
+        MainWindow.setCentralWidget(self.centralwidget)
+        self.statusbar = QtGui.QStatusBar(MainWindow)
+        self.statusbar.setObjectName(_fromUtf8("statusbar"))
+        MainWindow.setStatusBar(self.statusbar)
+        self.toolBar = QtGui.QToolBar(MainWindow)
+        self.toolBar.setObjectName(_fromUtf8("toolBar"))
+        MainWindow.addToolBar(QtCore.Qt.TopToolBarArea, self.toolBar)
+        self.actionDiscover = QtGui.QAction(MainWindow)
+        self.actionDiscover.setCheckable(True)
+        icon1 = QtGui.QIcon()
+        icon1.addPixmap(QtGui.QPixmap(_fromUtf8(":/base/icons/globe.png")), QtGui.QIcon.Normal, QtGui.QIcon.Off)
+        self.actionDiscover.setIcon(icon1)
+        self.actionDiscover.setObjectName(_fromUtf8("actionDiscover"))
+        self.actionSettings = QtGui.QAction(MainWindow)
+        icon2 = QtGui.QIcon()
+        icon2.addPixmap(QtGui.QPixmap(_fromUtf8(":/base/icons/gear.png")), QtGui.QIcon.Normal, QtGui.QIcon.Off)
+        self.actionSettings.setIcon(icon2)
+        self.actionSettings.setObjectName(_fromUtf8("actionSettings"))
+        self.actionAddIP = QtGui.QAction(MainWindow)
+        icon3 = QtGui.QIcon()
+        icon3.addPixmap(QtGui.QPixmap(_fromUtf8(":/base/icons/plus.png")), QtGui.QIcon.Normal, QtGui.QIcon.Off)
+        self.actionAddIP.setIcon(icon3)
+        self.actionAddIP.setObjectName(_fromUtf8("actionAddIP"))
+        self.toolBar.addAction(self.actionAddIP)
+        self.toolBar.addAction(self.actionDiscover)
+        self.toolBar.addSeparator()
+        self.toolBar.addAction(self.actionSettings)
+
+        self.retranslateUi(MainWindow)
+        QtCore.QMetaObject.connectSlotsByName(MainWindow)
+
+    def retranslateUi(self, MainWindow):
+        MainWindow.setWindowTitle(_translate("MainWindow", "FiSH", None))
+        self.label.setText(_translate("MainWindow", "Available Peers", None))
+        self.radioButton.setText(_translate("MainWindow", "Everybody", None))
+        self.radioButton_2.setText(_translate("MainWindow", "Selected Peer", None))
+        self.toolBar.setWindowTitle(_translate("MainWindow", "toolBar", None))
+        self.actionDiscover.setText(_translate("MainWindow", "Discover", None))
+        self.actionDiscover.setToolTip(_translate("MainWindow", "Turn on active file discovery", None))
+        self.actionSettings.setText(_translate("MainWindow", "Settings", None))
+        self.actionSettings.setToolTip(_translate("MainWindow", "Edit preferences", None))
+        self.actionAddIP.setText(_translate("MainWindow", "AddIP", None))
+        self.actionAddIP.setToolTip(_translate("MainWindow", "Manually add a peer", None))
+
+import icons_rc

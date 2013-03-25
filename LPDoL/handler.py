@@ -61,7 +61,12 @@ class MessageHandler(object):
         peer_uid=map(repr_peer, self.peer_list.items)
         #Prefix host UID to list
         peer_uid.insert(0,repr_peer(self.host))
-        message=PDMessage(1,peer_uid)
+        try:
+            message=PDMessage(1,peer_uid)
+        except:
+            logging.error('Peer Container has been corrupted')
+            self.peer_list.items=[]
+            return
         logging.debug('Hooking..')
         self.write(message)
         #Generate next time gap -- Exponential back-off
@@ -96,7 +101,7 @@ class MessageHandler(object):
 
     def resetAll(self):
         self.hook_gap=1
-        self.peer_list.items=[]
+        # self.peer_list.items=[]
         self.enabled=True
         try:
             self.hook_ID.cancel()

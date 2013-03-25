@@ -3,6 +3,7 @@ from twisted.internet.protocol import ClientFactory, Protocol
 from twisted.internet import reactor
 import json
 from common import *
+import logging
 
 EVENT_CODES={
     0:'FILES_LISTED',
@@ -22,6 +23,7 @@ class HashListRetrieve(StreamLineProtocol):
         try:
             fileHT=json.loads(message)
         except:
+            logging.error('Invalid JSON recieved from peer')
             success=False
         self.transport.loseConnection()
         self.factory.got_HT(success, fileHT)
@@ -32,9 +34,13 @@ class FileTransfer(StreamLineProtocol):
         self.fileHash=fileHash
         self.fObj=f_container
         self.retFn=self._FTReply
+        self.fRem=0
+        self.fSize=0
+        self.state=0
 
     def connectionMade(self):
         self.sendLine(FiTMessage(2,[(self.fileHash,)]))
+        self.state=1
 
     def serviceMessage(self, message):
         self.retFn(message)
@@ -47,18 +53,22 @@ class FileTransfer(StreamLineProtocol):
             elif msg.key != 3:
                 raise Exception('Wrong Code')
         except Exception as e:
+            logging.error('Failed to negotiate file transfer')
             self.transport.loseConnection()
             self.transport.got_file(False)
             return
-        self.fSize=int(msg.data[0][0])
+        self.state=2
+        self.fRem=int(msg.data[0][0])
+        self.fSize=self.fRem
         reply_msg=FiTMessage(3,[(str(self.fSize),)])
         StreamLineProtocol.registerSpHandler(self, self.fillFile)
         self.sendLine(reply_msg)
+        self.state=3
 
     def fillFile(self, data):
-        self.fSize-=len(data)
+        self.fRem-=len(data)
         self.fObj.write(data)
-        if self.fSize <= 0:
+        if self.fRem <= 0:
             self.fObj.close()
             self.transport.loseConnection()
             self.factory.got_file(True)
@@ -97,8 +107,8 @@ class FTFactory(ClientFactory):
                 d.errback('Truncted file transfer')
         
     def buildProtocol(self, addr):
-        ftInst=FileTransfer(self.fHash, self.fObj)
-        ftInst.factory=self
+        self.ftInst=FileTransfer(self.fHash, self.fObj)
+        self.ftInst.factory=self
         return ftInst
 
     def clientConnectionFailed(self, connector, reason):

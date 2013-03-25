@@ -39,12 +39,12 @@ class LMessage(object):
         Creates a message object from string of form 
             <key>:<data>'''
         #The derived class must have a context!!!
-        assert type(self.context) == MessageContext, 'Must be a valid context'
+        assert isinstance(self.context, MessageContext), 'Must be a valid context'
         if not message_str is None:
             key,data=self._parse_message(message_str)
         #Standard validation of key and data
-        assert type(key) == int, 'Invalid key type'
-        assert type(data) == list, 'Invalid data'
+        assert isinstance(key, int), 'Invalid key type'
+        assert isinstance(data,list), 'Invalid data'
         self._validate_message(key,data)
         self.key=key
         self.data=data
@@ -97,7 +97,6 @@ class LMessage(object):
             raise MessageException(2,'Invalid message parameters')
         if key in self.context.NO_PARAM and chop_msg[1] != '':
             raise MessageException(8,'No parameters allowed')
-        #Checking if type(<key>) is int
         if not key in self.context.NO_PARAM:
             data_str=chop_msg[1]
             data=data_str.split(';')
