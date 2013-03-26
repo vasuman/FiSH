@@ -1,6 +1,7 @@
 #probe.py
 from twisted.internet.protocol import ClientFactory, Protocol
 from twisted.internet import reactor
+from twisted.internet.defer import Deferred
 import json
 from common import *
 import logging
@@ -29,12 +30,13 @@ class HashListRetrieve(StreamLineProtocol):
         self.factory.got_HT(success, fileHT)
   
 class FileTransfer(StreamLineProtocol):
-    def __init__(self, fileHash, f_container):
+    def __init__(self, fileHash, f_container, def_obj):
         StreamLineProtocol.__init__(self)
+        self.def_obj=def_obj
         self.fileHash=fileHash
         self.fObj=f_container
         self.retFn=self._FTReply
-        self.fRem=0
+        self.fGot=0
         self.fSize=0
         self.state=0
 
@@ -55,23 +57,27 @@ class FileTransfer(StreamLineProtocol):
         except Exception as e:
             logging.error('Failed to negotiate file transfer')
             self.transport.loseConnection()
-            self.transport.got_file(False)
+            if not self.def_obj is None:
+                d, self.def_obj = self.def_obj, None
+                d.errback(str(e))
             return
         self.state=2
-        self.fRem=int(msg.data[0][0])
-        self.fSize=self.fRem
+        self.fSize=int(msg.data[0][0])
         reply_msg=FiTMessage(3,[(str(self.fSize),)])
         StreamLineProtocol.registerSpHandler(self, self.fillFile)
         self.sendLine(reply_msg)
-        self.state=3
 
     def fillFile(self, data):
-        self.fRem-=len(data)
+        self.fGot+=len(data)
         self.fObj.write(data)
-        if self.fRem <= 0:
+        if self.fGot >= self.fSize:
+            if not self.def_obj is None:
+                d, self.def_obj = self.def_obj, None
+                d.callback(True)
+            logging.info('File Transfer is done')
             self.fObj.close()
             self.transport.loseConnection()
-            self.factory.got_file(True)
+            
             
 
 class FHFactory(ClientFactory):
@@ -97,18 +103,15 @@ class FTFactory(ClientFactory):
         self.fHash=fHash
         self.fObj=f_container
         self.def_obj=def_obj
-
-    def got_file(self, success):
-        if self.def_obj is not None:
-            d, self.def_obj = self.def_obj, None
-            if success:    
-                d.callback(True)
-            else:
-                d.errback('Truncted file transfer')
+        self.ftInst=None
         
     def buildProtocol(self, addr):
-        self.ftInst=FileTransfer(self.fHash, self.fObj)
-        self.ftInst.factory=self
+        new_d=Deferred()
+        ftInst=FileTransfer(self.fHash, self.fObj, new_d)
+        ftInst.factory=self
+        if not self.def_obj is None:
+            d, self.def_obj = self.def_obj, None
+            d.callback(ftInst)
         return ftInst
 
     def clientConnectionFailed(self, connector, reason):
