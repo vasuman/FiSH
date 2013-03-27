@@ -2,7 +2,7 @@
 
 # Form implementation generated from reading ui file '../UI/fish.ui'
 #
-# Created: Tue Mar 26 21:57:38 2013
+# Created: Wed Mar 27 21:47:20 2013
 #      by: PyQt4 UI code generator 4.10
 #
 # WARNING! All changes made in this file will be lost!
@@ -170,6 +170,12 @@ class Ui_MainWindow(object):
         self.actionDownloadAs.setIcon(icon8)
         self.actionDownloadAs.setIconVisibleInMenu(True)
         self.actionDownloadAs.setObjectName(_fromUtf8("actionDownloadAs"))
+        self.actionDeleteIP = QtGui.QAction(MainWindow)
+        icon9 = QtGui.QIcon()
+        icon9.addPixmap(QtGui.QPixmap(_fromUtf8(":/base/icons/delete.png")), QtGui.QIcon.Normal, QtGui.QIcon.Off)
+        self.actionDeleteIP.setIcon(icon9)
+        self.actionDeleteIP.setIconVisibleInMenu(True)
+        self.actionDeleteIP.setObjectName(_fromUtf8("actionDeleteIP"))
         self.toolBar.addAction(self.actionAddIP)
         self.toolBar.addAction(self.actionDiscover)
         self.toolBar.addSeparator()
@@ -199,5 +205,7 @@ class Ui_MainWindow(object):
         self.actionDownload.setText(_translate("MainWindow", "Download", None))
         self.actionDownload.setToolTip(_translate("MainWindow", "Download the file", None))
         self.actionDownloadAs.setText(_translate("MainWindow", "Save As..", None))
+        self.actionDeleteIP.setText(_translate("MainWindow", "Delete Peer", None))
+        self.actionDeleteIP.setToolTip(_translate("MainWindow", "Delete peer from list", None))
 
 import icons_rc

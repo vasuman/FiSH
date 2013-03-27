@@ -65,6 +65,12 @@ class PeerContainer(QtGui.QStandardItemModel):
 				self.items.remove(item)
 				self.refresh()
 
+	def removeAddr(self, addr):
+		for item in self.items:
+			if item.addr == addr:
+				self.discard(item)
+				self.refresh()
+
 	def getAddrList(self):
 		return [item.addr for item in self.items]
 
@@ -215,4 +221,4 @@ class DownloadWidgetManager(object):
 			del self.watchList[row]
 			del self.fMap[idFT]
 			del self.prevState[idFT]
-			del self.tCount[idF]
+			del self.tCount[idFT]

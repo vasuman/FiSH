@@ -5,7 +5,9 @@ Stands for 'Fi'le 'SH'aring.
 A simple file transfer program that requires zero configuration. It discovers peers through IP Multicast and requires no central server to manage all connections. All communication is purely P2P.
 
 ## Dependencies
+- [Python 2.7][python2]
 - [Twisted][twisted-python] - A web-framework for python
+- [PyQt4][python-qt4] - A GUI tookit for python
 
 ## Basic Concepts
 * Each Peer is assigned a unique UID -- 16 byte string, and a name chosen by the user. From now on the string `<UID>.<name>` refers to the *"ident\_string"* of the peer the uniquely identifies each peer.
@@ -71,19 +73,15 @@ The probe and daemon exchange file indexes and handle file transfers using 4 bas
 4. **ERROR** - The daemon sends this message when it recieves an invalid command string. There a maximum of three invalid commands for each probe instance. 
 
 ## Running
-In the main directory, run:
+**Tests are broken**
 
-`$ python2.7 -m test.prompt /dir/to/sharing-folder`
+The app can be run by running `$ python2 fish.py`
 
-All files in the specified directory will be shared.
-On running, you will be presented with a prompt 
-
-`>>`
-
-Where you can enter commands that will be evaluated
-
+- [Windows Executable][fish-win32exe]
 
 ## Author
 > Vasuman Ravichandran (<vasumanar@gmail.com>)
 
 [twisted-python]:http://twistedmatrix.com/trac/
+[python-qt4]:http://riverbankcomputing.com/software/pyqt/
+[python2]:http://python.org/getit/

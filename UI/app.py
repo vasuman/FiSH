@@ -40,7 +40,7 @@ class UIController(QtGui.QMainWindow):
         self.ui.tableView.setModel(self.proxy)
         self.fileSelection=self.ui.tableView.selectionModel()
         self.dloadMgr=model.DownloadWidgetManager(self.ui.tableWidget)
-        self.uiFix()
+        self.tableHeaderResize()
         self.initConnection()    
 
     def listCtxtMenu(self, point):
@@ -49,6 +49,7 @@ class UIController(QtGui.QMainWindow):
         menu=QtGui.QMenu(parent=self.ui.listView)
         menu.addAction(self.ui.actionExplore)
         menu.addAction(self.ui.actionBlacklistPeer)
+        menu.addAction(self.ui.actionDeleteIP)
         menu.exec_(self.ui.listView.mapToGlobal(point))
 
     def fileCtxtMenu(self, point):
@@ -62,7 +63,7 @@ class UIController(QtGui.QMainWindow):
     def initConnection(self):
         self.ui.actionDiscover.triggered.connect(self.setDiscover)
         self.ui.actionAddIP.triggered.connect(self.manAddIP)
-        self.ui.actionClearBlacklist.triggered.connect(self.peer_container.clearBlacklist)
+        self.ui.actionClearBlacklist.triggered.connect(self.resetBan)
         self.ui.actionBlacklistPeer.triggered.connect(self.blacklistPeer)
         self.ui.actionExplore.triggered.connect(self.explorePeer)
         self.peer_container.updated.connect(self.updateHT)
@@ -74,6 +75,11 @@ class UIController(QtGui.QMainWindow):
         self.peerSelection.selectionChanged.connect(self.filterIP)
         self.ui.actionDownload.triggered.connect(self.downloadAction)
         self.ui.actionDownloadAs.triggered.connect(self.downloadAsAction)
+        self.ui.actionDeleteIP.triggered.connect(self.deletePeer)
+
+    def resetBan(self):
+        QtGui.QMessageBox.information(self, 'Blacklist Cleared', 'List of blacklisted peers has been reset')
+        self.peer_container.clearBlacklist()
 
     def filterIP(self):
         if not self.ui.radioButton.isChecked():
@@ -117,14 +123,17 @@ class UIController(QtGui.QMainWindow):
             self.firstRun()
         save_settings_to_file(self.settings, SETTINGS_FILE)
 
+    def deletePeer(self):
+        addr=self.getSelectedPeer()
+        self.peer_container.removeAddr(addr)
 
     def isValidConfig(self):
         return is_name(self.settings['NAME']) and is_dir_path(self.settings['INDEXER_PATH'])
 
     def downloadAction(self):
         name, addr, fHash=self.getSelectedFile()
-        option=QtGui.QMessageBox.question(self, 'Download file', 'Confirm download {0}'.format(name),\
-            QtGui.QMessageBox.No | QtGui.QMessageBox.Yes)
+        option=QtGui.QMessageBox.question(self, 'Download file', 'Confirm download {0}'\
+            .format(name), QtGui.QMessageBox.No | QtGui.QMessageBox.Yes)
         if option == QtGui.QMessageBox.Yes:
             sv_fObj=self.quickSaveFile(name)
             if sv_fObj:
@@ -179,7 +188,8 @@ class UIController(QtGui.QMainWindow):
         frDialog.ui.setupUi(frDialog)
         frDialog.ui.lineEdit.setText(self.settings['NAME'])
         def folderHandler():
-            shareFolder=str(QtGui.QFileDialog.getExistingDirectory(frDialog,'Choose a directory to share'))
+            shareFolder=str(QtGui.QFileDialog.getExistingDirectory(frDialog, \
+                'Choose a directory to share'))
             frDialog.ui.lineEdit_2.setText(shareFolder)
             self.settings['INDEXER_PATH']=shareFolder
         frDialog.ui.pushButton.clicked.connect(folderHandler)
@@ -213,10 +223,11 @@ class UIController(QtGui.QMainWindow):
         self.busy_peers.append(addr)
         reactor.connectTCP(addr, 17395, probe.FHFactory(d))
     
-    def logError(self, reason, addr):
+    def logError(self, reason, addr, role):
         if addr in self.busy_peers:
             self.busy_peers.remove(addr)
-        logging.error('Error connecting to {0} : {1}'.format(addr, str(reason)))
+        logging.error('Error in role {2} connecting to {0} : {1}'\
+            .format(addr, str(reason), str(role)))
 
     def setDiscover(self):
         self.pd.setEnable(self.ui.actionDiscover.isChecked())
@@ -231,8 +242,7 @@ class UIController(QtGui.QMainWindow):
         if not self.fileSelection.hasSelection():
             return None
         return [str(self.file_model.itemFromIndex(self.proxy.mapToSource(\
-                self.fileSelection.selectedRows(column=idx)[0])\
-                ).text()) for idx in [0,2,3]]
+                self.fileSelection.selectedRows(column=idx)[0])).text()) for idx in [0,2,3]]
 
     def explorePeer(self):
         addr=self.getSelectedPeer()
@@ -242,7 +252,7 @@ class UIController(QtGui.QMainWindow):
         addr=self.getSelectedPeer()
         self.peer_container.blacklistAddr(addr)
 
-    def uiFix(self):
+    def tableHeaderResize(self):
         header_crtl=self.ui.tableView.horizontalHeader()
         header_crtl.setResizeMode(0, QtGui.QHeaderView.Stretch)
         header_crtl.setResizeMode(1, QtGui.QHeaderView.ResizeToContents)
@@ -251,7 +261,6 @@ class UIController(QtGui.QMainWindow):
         header_crtl.setResizeMode(0, QtGui.QHeaderView.Stretch)
         header_crtl.setResizeMode(1, QtGui.QHeaderView.ResizeToContents)
         header_crtl.setResizeMode(2, QtGui.QHeaderView.ResizeToContents)
-
 
 
 def exec_main_app():
