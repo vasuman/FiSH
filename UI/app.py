@@ -73,6 +73,7 @@ class UIController(QtGui.QMainWindow):
         self.ui.radioButton_2.toggled.connect(self.filterIP)
         self.ui.lineEdit.textChanged.connect(self.proxy.setFilterFixedString)
         self.peerSelection.selectionChanged.connect(self.filterIP)
+        self.ui.tableView.doubleClicked.connect(self.downloadAction)
         self.ui.actionDownload.triggered.connect(self.downloadAction)
         self.ui.actionDownloadAs.triggered.connect(self.downloadAsAction)
         self.ui.actionDeleteIP.triggered.connect(self.deletePeer)
